@@ -9,12 +9,12 @@ namespace WebApi.Models
         [BindNever]
         public long ProductId { get; set; }
         [Required(ErrorMessage = "Name is required")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
         [Required(ErrorMessage = "Description is required")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
         [Column(TypeName = "decimal(8,2)")]
         [Required(ErrorMessage = "Price is required")]
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
         [Required(ErrorMessage = "CategoryId is required")]
         public long CategoryId { get; set; }
         [BindNever]

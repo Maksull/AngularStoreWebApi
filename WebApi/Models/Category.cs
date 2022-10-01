@@ -8,7 +8,7 @@ namespace WebApi.Models
         [BindNever]
         public long CategoryId { get; set; }
         [Required(ErrorMessage = "Name is required")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
         [BindNever]
         public IEnumerable<Product>? Products { get; set; }
     }
