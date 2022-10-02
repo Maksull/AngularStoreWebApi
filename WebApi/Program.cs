@@ -14,6 +14,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(opts => opts.AddPolicy("StoreOrigins", policy =>
+{
+    policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod();
+}));
+
 builder.Services.AddDbContext<ApiDataContext>(opts =>
 {
     opts.UseSqlServer(builder.Configuration["ConnectionStrings:Store"]!);
@@ -51,6 +56,9 @@ var app = builder.Build();
 
 #region App
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -59,8 +67,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseCors("StoreOrigins");
 
 app.MapControllers();
 
