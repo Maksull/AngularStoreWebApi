@@ -32,13 +32,13 @@ namespace WebApi.Controllers
             {
                 return NotFound($"No user with username {request.Username}");
             }
-            if (await _userManager.CheckPasswordAsync(user, request.Password!))
+            if (!await _userManager.CheckPasswordAsync(user, request.Password!))
             {
                 return BadRequest($"Invalid password");
             }
             string token = CreateToken(user);
 
-            return Ok();
+            return Ok(token);
         }
 
         private string CreateToken(IdentityUser user)
