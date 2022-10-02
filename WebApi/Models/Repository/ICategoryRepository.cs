@@ -4,8 +4,8 @@
     {
         IQueryable<Category> Categories { get; }
 
-        Task SaveCategoryAsync(Category category);
         Task CreateCategoryAsync(Category category);
         Task DeleteCategoryAsync(Category category);
+        Task UpdateCategoryAsync(Category category);
     }
 }

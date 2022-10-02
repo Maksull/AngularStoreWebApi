@@ -25,8 +25,9 @@ namespace WebApi.Models.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task SaveProductAsync(Product product)
+        public async Task UpdateProductAsync(Product product)
         {
+            _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
     }

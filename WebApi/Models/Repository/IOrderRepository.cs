@@ -4,8 +4,8 @@
     {
         IQueryable<Order> Orders { get; }
 
-        Task SaveOrderAsync(Order order);
         Task CreateOrderAsync(Order order);
         Task DeleteOrderAsync(Order order);
+        Task UpdateOrderAsync(Order order);
     }
 }

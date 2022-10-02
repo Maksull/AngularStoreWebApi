@@ -15,6 +15,7 @@ namespace WebApi.Models.Repository
 
         public async Task CreateOrderAsync(Order order)
         {
+            _context.AttachRange(order.Lines!.Select(l => l.Product!));
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
         }
@@ -25,8 +26,9 @@ namespace WebApi.Models.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task SaveOrderAsync(Order order)
+        public async Task UpdateOrderAsync(Order order)
         {
+            _context.Orders.Update(order);
             await _context.SaveChangesAsync();
         }
     }
