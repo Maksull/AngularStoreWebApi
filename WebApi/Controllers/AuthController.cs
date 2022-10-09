@@ -38,7 +38,7 @@ namespace WebApi.Controllers
             }
             string token = CreateToken(user);
 
-            return Ok(token);
+            return Ok(new AuthResponseDto { Token = token});
         }
 
         private string CreateToken(IdentityUser user)
