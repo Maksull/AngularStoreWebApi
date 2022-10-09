@@ -64,9 +64,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateProduct(Product product)
         {
+            var tempCategory = product.Category;
+            var tempSupplier = product.Supplier;
             product.Category = null;
             product.Supplier = null;
             await _repository.CreateProductAsync(product);
+            product.Category = tempCategory;
+            product.Supplier = tempSupplier;
             return Ok(product);
         }
 

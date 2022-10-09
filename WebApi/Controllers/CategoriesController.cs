@@ -70,7 +70,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateCategory(Category category)
         {
             await _repository.CreateCategoryAsync(category);
-            return Ok();
+            return Ok(category);
         }
 
         [HttpPut]
