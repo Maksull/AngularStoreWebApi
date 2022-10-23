@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApi.Models.Database;
 using WebApi.Models.Repository;
+using WebApi.Services.EmailService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(opts => opts.AddPolicy("StoreOrigins", policy =>
 {
-    policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod();
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
 }));
 
 builder.Services.AddDbContext<ApiDataContext>(opts =>
@@ -35,6 +36,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 builder.Services.AddAuthentication(opts =>

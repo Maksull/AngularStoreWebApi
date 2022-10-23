@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
 using WebApi.Models.Repository;
+using WebApi.Services.EmailService;
 
 namespace WebApi.Controllers
 {
@@ -13,10 +13,12 @@ namespace WebApi.Controllers
     public sealed class OrdersController : ControllerBase
     {
         private readonly IOrderRepository _repository;
+        private readonly IEmailService _emailService;
 
-        public OrdersController(IOrderRepository repository)
+        public OrdersController(IOrderRepository repository, IEmailService emailService)
         {
             _repository = repository;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -55,6 +57,12 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateOrder(Order order)
         {
             await _repository.CreateOrderAsync(order);
+            _emailService.Send(new()
+            {
+                To = order.Email,
+                Subject = "You have made an order",
+                Body = $"Your orderId is {order.OrderId}"
+            });
             return Ok(order);
         }
 
