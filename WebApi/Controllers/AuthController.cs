@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Principal;
+using System.Text;
 using WebApi.Models.Dto;
 
 namespace WebApi.Controllers
@@ -38,7 +39,40 @@ namespace WebApi.Controllers
             }
             string token = CreateToken(user);
 
-            return Ok(new AuthResponseDto { Token = token});
+            return Ok(new JwtDto { Jwt = token });
+        }
+
+        [HttpPost("validate")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Validate(JwtDto token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var validationParameters = GetValidationParameters();
+
+            SecurityToken validatedToken;
+
+            try
+            {
+                IPrincipal principal = tokenHandler.ValidateToken(token.Jwt, validationParameters, out validatedToken);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+            return Ok(new JwtDto { Jwt = token.Jwt });
+        }
+
+        private TokenValidationParameters GetValidationParameters()
+        {
+            return new TokenValidationParameters()
+            {
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecurityKey").Value!))
+            };
         }
 
         private string CreateToken(IdentityUser user)

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
@@ -25,13 +24,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetCategories()
         {
-            if(_repository.Categories != null)
+            if (_repository.Categories != null)
             {
                 IEnumerable<Category> categories = _repository.Categories.Include(c => c.Products);
 
-                foreach(var c in categories)
+                foreach (var c in categories)
                 {
-                    foreach(var p in c.Products!)
+                    foreach (var p in c.Products!)
                     {
                         p.Category = null;
                     }
@@ -48,11 +47,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCategory(long id)
         {
-            if(_repository.Categories != null)
+            if (_repository.Categories != null)
             {
                 Category? c = await _repository.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.CategoryId == id);
 
-                if(c != null)
+                if (c != null)
                 {
                     foreach (var p in c.Products!)
                     {
@@ -78,7 +77,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateCategory(Category category)
         {
-            if(await _repository.Categories.ContainsAsync(category))
+            if (await _repository.Categories.ContainsAsync(category))
             {
                 await _repository.UpdateCategoryAsync(category);
                 return Ok(category);
@@ -91,11 +90,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCategory(long id)
         {
-            if(_repository.Categories != null)
+            if (_repository.Categories != null)
             {
                 Category? c = await _repository.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
 
-                if(c != null)
+                if (c != null)
                 {
                     await _repository.DeleteCategoryAsync(c);
                     return Ok(c);

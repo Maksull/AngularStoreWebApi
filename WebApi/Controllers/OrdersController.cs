@@ -38,11 +38,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrder(long id)
         {
-            if(_repository.Orders != null)
+            if (_repository.Orders != null)
             {
                 Order? o = await _repository.Orders.Include(o => o.Lines)!.ThenInclude(l => l.Product).FirstOrDefaultAsync(o => o.OrderId == id);
 
-                if(o != null)
+                if (o != null)
                 {
                     return Ok(o);
                 }
@@ -71,7 +71,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateOrder(Order order)
         {
-            if(await _repository.Orders.ContainsAsync(order))
+            if (await _repository.Orders.ContainsAsync(order))
             {
                 await _repository.UpdateOrderAsync(order);
                 return Ok(order);
@@ -84,11 +84,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrder(long id)
         {
-            if(_repository.Orders != null)
+            if (_repository.Orders != null)
             {
                 Order? o = await _repository.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
 
-                if(o != null)
+                if (o != null)
                 {
                     await _repository.DeleteOrderAsync(o);
                     return Ok(o);

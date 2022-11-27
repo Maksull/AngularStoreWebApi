@@ -23,5 +23,7 @@ namespace WebApi.Models
         public long SupplierId { get; set; }
         [BindNever]
         public Supplier? Supplier { get; set; }
+        [Required(ErrorMessage = "Images are required")]
+        public string Images { get; set; } = string.Empty;
     }
 }

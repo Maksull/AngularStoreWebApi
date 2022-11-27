@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using WebApi.Models;
 using WebApi.Models.Repository;
 
@@ -26,7 +24,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetSuppliers()
         {
-            if(_repository.Suppliers != null)
+            if (_repository.Suppliers != null)
             {
                 IEnumerable<Supplier> suppliers = _repository.Suppliers.Include(s => s.Products);
 
@@ -49,13 +47,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetSupplier(long id)
         {
-            if(_repository.Suppliers != null)
+            if (_repository.Suppliers != null)
             {
                 Supplier? s = await _repository.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
 
-                if(s != null)
+                if (s != null)
                 {
-                    foreach(var p in s.Products!)
+                    foreach (var p in s.Products!)
                     {
                         p.Supplier = null;
                     }
@@ -79,7 +77,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateSupplier(Supplier supplier)
         {
-            if(await _repository.Suppliers.ContainsAsync(supplier))
+            if (await _repository.Suppliers.ContainsAsync(supplier))
             {
                 await _repository.UpdateSupplierAsync(supplier);
                 return Ok(supplier);
@@ -92,11 +90,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteSupplier(long id)
         {
-            if(_repository.Suppliers != null)
+            if (_repository.Suppliers != null)
             {
                 Supplier? s = await _repository.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
 
-                if(s != null)
+                if (s != null)
                 {
                     await _repository.DeleteSupplierAsync(s);
                     return Ok(s);

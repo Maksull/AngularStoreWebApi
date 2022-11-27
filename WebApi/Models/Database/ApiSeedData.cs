@@ -26,7 +26,8 @@ namespace WebApi.Models.Database
                         Description = "A boat for one person",
                         Price = 275,
                         Category = c1,
-                        Supplier = s1
+                        Supplier = s1,
+                        Images = "Kayak/kayak.png"
                     },
                     new Product
                     {
@@ -34,7 +35,8 @@ namespace WebApi.Models.Database
                         Description = "Protective and fashionable",
                         Price = 48.95m,
                         Category = c1,
-                        Supplier = s1
+                        Supplier = s1,
+                        Images = "Lifejacket/lifejacket.png"
                     },
                     new Product
                     {
@@ -42,7 +44,8 @@ namespace WebApi.Models.Database
                         Description = "The best size and weight",
                         Price = 19.50m,
                         Category = c2,
-                        Supplier = s2
+                        Supplier = s2,
+                        Images = "Ball/ball.png"
                     },
                     new Product
                     {
@@ -50,7 +53,8 @@ namespace WebApi.Models.Database
                         Description = "Give your playing field a professional touch",
                         Price = 34.95m,
                         Category = c2,
-                        Supplier = s2
+                        Supplier = s2,
+                        Images = "Corner flags/corner_flags.png"
                     },
                     new Product
                     {
@@ -58,7 +62,8 @@ namespace WebApi.Models.Database
                         Description = "Flat-packed 35,000-seat stadium",
                         Price = 79500,
                         Category = c2,
-                        Supplier = s2
+                        Supplier = s2,
+                        Images = "Stadium/stadium.png"
                     },
                     new Product
                     {
@@ -66,7 +71,8 @@ namespace WebApi.Models.Database
                         Description = "Improve brain efficiency by 75%",
                         Price = 16,
                         Category = c3,
-                        Supplier = s3
+                        Supplier = s3,
+                        Images = "Thinking cap/thinking_cap.png"
                     },
                     new Product
                     {
@@ -74,7 +80,8 @@ namespace WebApi.Models.Database
                         Description = "Secretly give your opponent a disadvantage",
                         Price = 29.95m,
                         Category = c3,
-                        Supplier = s3
+                        Supplier = s3,
+                        Images = "Unsteady chair/unsteady_chair.png"
                     },
                     new Product
                     {
@@ -82,15 +89,17 @@ namespace WebApi.Models.Database
                         Description = "A fun game for the family",
                         Price = 75,
                         Category = c3,
-                        Supplier = s3
+                        Supplier = s3,
+                        Images = "Human chess board/human_chess_board.png"
                     },
                     new Product
                     {
-                        Name = "Bling-Bling King",
-                        Description = "Gold-plated, diamond-studded King",
+                        Name = "T-shirt",
+                        Description = "Just t-shirt",
                         Price = 1200,
                         Category = c3,
-                        Supplier = s3
+                        Supplier = s3,
+                        Images = "T-shirt/t_shirt.png"
                     }
                 );
             }

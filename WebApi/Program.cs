@@ -1,3 +1,4 @@
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using System.Text;
 using WebApi.Models.Database;
 using WebApi.Models.Repository;
 using WebApi.Services.EmailService;
+using WebApi.Services.S3Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,7 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IS3Service, S3Service>();
 
 
 builder.Services.AddAuthentication(opts =>
@@ -49,6 +52,7 @@ builder.Services.AddAuthentication(opts =>
     opts.TokenValidationParameters = new()
     {
         ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecurityKey"]!)),
         ValidateIssuer = false,
         ValidateAudience = false
@@ -60,6 +64,13 @@ builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
     opts.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
     opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<IAmazonS3>();
+
 #endregion
 
 var app = builder.Build();

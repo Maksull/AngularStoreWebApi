@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
+using WebApi.Models.Dto;
 using WebApi.Models.Repository;
+using WebApi.Services.S3Service;
 
 namespace WebApi.Controllers
 {
@@ -12,10 +15,14 @@ namespace WebApi.Controllers
     public sealed class ProductsController : ControllerBase
     {
         private readonly IProductRepository _repository;
+        private readonly IS3Service _s3Service;
+        private readonly IMapper _mapper;
 
-        public ProductsController(IProductRepository repository)
+        public ProductsController(IProductRepository repository, IS3Service s3Service, IMapper mapper)
         {
             _repository = repository;
+            _s3Service = s3Service;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -45,11 +52,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProduct(long id)
         {
-            if(_repository.Products != null)
+            if (_repository.Products != null)
             {
                 Product? p = await _repository.Products.Include(p => p.Category).Include(p => p.Supplier).FirstOrDefaultAsync(p => p.ProductId == id);
 
-                if(p != null)
+                if (p != null)
                 {
                     p.Category!.Products = null;
                     p.Supplier!.Products = null;
@@ -62,27 +69,36 @@ namespace WebApi.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateProduct(Product product)
+        public async Task<IActionResult> CreateProduct([FromForm] ProductDto productDto)
         {
-            var tempCategory = product.Category;
-            var tempSupplier = product.Supplier;
-            product.Category = null;
-            product.Supplier = null;
+            Product product = _mapper.Map<Product>(productDto);
+
+            await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
+
             await _repository.CreateProductAsync(product);
-            product.Category = tempCategory;
-            product.Supplier = tempSupplier;
             return Ok(product);
         }
 
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateProduct(Product product)
+        public async Task<IActionResult> UpdateProduct([FromForm] ProductDto productDto)
         {
-            if(await _repository.Products.ContainsAsync(product))
+            Product product = _mapper.Map<Product>(productDto);
+
+            if (await _repository.Products.ContainsAsync(product))
             {
-                product.Category = null;
-                product.Supplier = null;
+                if (productDto.Img != null)
+                {
+                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(product.ProductId));
+                    await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
+                }
+                else
+                {
+                    product.Images = await GetProductImagePath(product.ProductId);
+                }
+
+
                 await _repository.UpdateProductAsync(product);
                 return Ok(product);
             }
@@ -94,18 +110,35 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteProduct(long id)
         {
-            if(_repository.Products != null)
+            if (_repository.Products != null)
             {
                 Product? p = await _repository.Products.FirstOrDefaultAsync(p => p.ProductId == id);
 
-                if(p != null)
+                if (p != null)
                 {
+                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(id));
                     await _repository.DeleteProductAsync(p);
                     return Ok(p);
                 }
             }
-            
             return NotFound();
+        }
+
+
+
+
+        private async Task<string> GetProductImagePath(long id)
+        {
+            if (_repository.Products != null)
+            {
+                Product? p = await _repository.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+
+                if (p != null)
+                {
+                    return p.Images;
+                }
+            }
+            return string.Empty;
         }
     }
 }
