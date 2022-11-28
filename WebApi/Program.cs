@@ -1,3 +1,5 @@
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
 using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -67,9 +69,20 @@ builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddAWSService<IAmazonS3>(new AWSOptions
+    {
+        Credentials = new BasicAWSCredentials(builder.Configuration["AWS:AccessKeyId"], builder.Configuration["AWS:SecretAccessKey"])
+    });
+}
 
-builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
-builder.Services.AddAWSService<IAmazonS3>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+    builder.Services.AddAWSService<IAmazonS3>();
+}
+
 
 #endregion
 

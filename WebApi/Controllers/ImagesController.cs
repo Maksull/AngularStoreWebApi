@@ -53,7 +53,7 @@ namespace WebApi.Controllers
                 GetObjectResponse s3Object;
                 try
                 {
-                    s3Object = await _s3Client.GetObjectAsync("trying-good-name", key);
+                    s3Object = await _s3Client.GetObjectAsync(_s3BucketName, key);
                 }
                 catch (Exception)
                 {
