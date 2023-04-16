@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Core.Entities;
+using Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApi.Models;
-using WebApi.Models.Repository;
 
 namespace WebApi.Controllers
 {
@@ -11,96 +10,122 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class SuppliersController : ControllerBase
     {
-        private readonly ISupplierRepository _repository;
+        private readonly ISupplierService _supplierService;
 
-        public SuppliersController(ISupplierRepository repository)
+        public SuppliersController(ISupplierService supplierService)
         {
-            _repository = repository;
+            _supplierService = supplierService;
         }
 
         [HttpGet]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Supplier>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public IActionResult GetSuppliers()
         {
-            if (_repository.Suppliers != null)
+            try
             {
-                IEnumerable<Supplier> suppliers = _repository.Suppliers.Include(s => s.Products);
+                var products = _supplierService.GetSuppliers();
 
-                foreach (var s in suppliers)
+                if (products != null)
                 {
-                    foreach (var p in s.Products!)
-                    {
-                        p.Supplier = null;
-                    }
+                    return Ok(products);
                 }
 
-                return Ok(suppliers);
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetSupplier(long id)
         {
-            if (_repository.Suppliers != null)
+            try
             {
-                Supplier? s = await _repository.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
+                var supplier = await _supplierService.GetSupplier(id);
 
-                if (s != null)
+                if (supplier != null)
                 {
-                    foreach (var p in s.Products!)
-                    {
-                        p.Supplier = null;
-                    }
-                    return Ok(s);
+                    return Ok(supplier);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateSupplier(Supplier supplier)
         {
-            await _repository.CreateSupplierAsync(supplier);
-            return Ok(supplier);
+            try
+            {
+                var s = await _supplierService.CreateSupplier(supplier);
+
+                return Ok(s);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPut]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateSupplier(Supplier supplier)
         {
-            if (await _repository.Suppliers.ContainsAsync(supplier))
+            try
             {
-                await _repository.UpdateSupplierAsync(supplier);
-                return Ok(supplier);
-            }
-            return NotFound();
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteSupplier(long id)
-        {
-            if (_repository.Suppliers != null)
-            {
-                Supplier? s = await _repository.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
+                var s = await _supplierService.UpdateSupplier(supplier);
 
                 if (s != null)
                 {
-                    await _repository.DeleteSupplierAsync(s);
                     return Ok(s);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteSupplier(long id)
+        {
+            try
+            {
+                var supplier = await _supplierService.DeleteSupplier(id);
+
+                if (supplier != null)
+                {
+                    return Ok(supplier);
+                }
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
     }
 }

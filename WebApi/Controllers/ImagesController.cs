@@ -1,5 +1,4 @@
-﻿using Amazon.S3;
-using Amazon.S3.Model;
+﻿using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,58 +9,58 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class ImagesController : ControllerBase
     {
-        private readonly IAmazonS3 _s3Client;
-        private readonly IConfiguration _configuration;
+        private readonly IImageService _imageService;
 
-        private readonly string _s3BucketName;
-
-        public ImagesController(IAmazonS3 s3Client, IConfiguration configuration)
+        public ImagesController(IImageService imageService)
         {
-            _s3Client = s3Client;
-            _configuration = configuration;
-            _s3BucketName = _configuration.GetSection("AWS:BucketName").Value!;
+            _imageService = imageService;
         }
 
         [HttpPost("upload")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UploadFile(IFormFile file)
         {
-            if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
+            try
             {
-                PutObjectRequest request = new()
+                var f = await _imageService.UploadFile(file);
+
+                if (f != null)
                 {
-                    BucketName = _s3BucketName,
-                    Key = $"{file.FileName}",
-                    InputStream = file.OpenReadStream(),
-                };
-                request.Metadata.Add("Content-Type", file.ContentType);
-                await _s3Client.PutObjectAsync(request);
-                return Ok($"File {file.FileName} uploaded to S3 successfully!");
+                    return Ok($"{f.FileName} was uploaded successfully");
+                }
+
+                return NotFound();
             }
-            return NotFound($"Bucket {_s3BucketName} does not exist");
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpGet("request")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileStreamResult))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetFile(string key)
         {
-            if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
+            try
             {
-                GetObjectResponse s3Object;
-                try
+                var file = await _imageService.GetFile(key);
+
+                if (file != null)
                 {
-                    s3Object = await _s3Client.GetObjectAsync(_s3BucketName, key);
+                    return File(file.ResponseStream, file.Headers.ContentType);
                 }
-                catch (Exception)
-                {
-                    return NotFound($"File {key} does not exist");
-                }
-                return File(s3Object.ResponseStream, s3Object.Headers.ContentType);
+
+                return NotFound();
             }
-            return NotFound($"Bucket {_s3BucketName} does not exist");
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
     }

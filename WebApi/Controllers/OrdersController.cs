@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Core.Entities;
+using Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApi.Models;
-using WebApi.Models.Repository;
-using WebApi.Services.EmailService;
 
 namespace WebApi.Controllers
 {
@@ -12,89 +10,121 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class OrdersController : ControllerBase
     {
-        private readonly IOrderRepository _repository;
-        private readonly IEmailService _emailService;
+        private readonly IOrderService _orderService;
 
-        public OrdersController(IOrderRepository repository, IEmailService emailService)
+        public OrdersController(IOrderService orderService)
         {
-            _repository = repository;
-            _emailService = emailService;
+            _orderService = orderService;
         }
 
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public IActionResult GetOrders()
         {
-            if (_repository.Orders != null)
+            try
             {
-                return Ok(_repository.Orders.Include(o => o.Lines)!.ThenInclude(l => l.Product));
+                var orders = _orderService.GetOrders();
+
+                if (orders != null)
+                {
+                    return Ok(orders);
+                }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetOrder(long id)
         {
-            if (_repository.Orders != null)
+            try
             {
-                Order? o = await _repository.Orders.Include(o => o.Lines)!.ThenInclude(l => l.Product).FirstOrDefaultAsync(o => o.OrderId == id);
+                var order = await _orderService.GetOrder(id);
 
-                if (o != null)
+                if (order != null)
                 {
-                    return Ok(o);
+                    return Ok(order);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPost]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateOrder(Order order)
         {
-            await _repository.CreateOrderAsync(order);
-            _emailService.Send(new()
+            try
             {
-                To = order.Email,
-                Subject = "You have made an order",
-                Body = $"Your orderId is {order.OrderId}"
-            });
-            return Ok(order);
+                var o = await _orderService.CreateOrder(order);
+
+                return Ok(o);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPut]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateOrder(Order order)
         {
-            if (await _repository.Orders.ContainsAsync(order))
+            try
             {
-                await _repository.UpdateOrderAsync(order);
-                return Ok(order);
-            }
-            return NotFound();
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteOrder(long id)
-        {
-            if (_repository.Orders != null)
-            {
-                Order? o = await _repository.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+                var o = await _orderService.UpdateOrder(order);
 
                 if (o != null)
                 {
-                    await _repository.DeleteOrderAsync(o);
                     return Ok(o);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteOrder(long id)
+        {
+            try
+            {
+                var order = await _orderService.DeleteOrder(id);
+
+                if (order != null)
+                {
+                    return Ok(order);
+                }
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
     }
 }

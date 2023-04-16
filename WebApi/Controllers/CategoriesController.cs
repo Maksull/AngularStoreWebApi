@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Core.Entities;
+using Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApi.Models;
-using WebApi.Models.Repository;
 
 namespace WebApi.Controllers
 {
@@ -11,96 +10,122 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class CategoriesController : ControllerBase
     {
-        private readonly ICategoryRepository _repository;
+        private readonly ICategoryService _categoryService;
 
-        public CategoriesController(ICategoryRepository repository)
+        public CategoriesController(ICategoryService categoryService)
         {
-            _repository = repository;
+            _categoryService = categoryService;
         }
 
         [HttpGet]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Category>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public IActionResult GetCategories()
         {
-            if (_repository.Categories != null)
+            try
             {
-                IEnumerable<Category> categories = _repository.Categories.Include(c => c.Products);
+                var categories = _categoryService.GetCategories();
 
-                foreach (var c in categories)
+                if (categories != null)
                 {
-                    foreach (var p in c.Products!)
-                    {
-                        p.Category = null;
-                    }
+                    return Ok(categories);
                 }
 
-                return Ok(categories);
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetCategory(long id)
         {
-            if (_repository.Categories != null)
+            try
             {
-                Category? c = await _repository.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.CategoryId == id);
+                var category = await _categoryService.GetCategory(id);
 
-                if (c != null)
+                if (category != null)
                 {
-                    foreach (var p in c.Products!)
-                    {
-                        p.Category = null;
-                    }
-                    return Ok(c);
+                    return Ok(category);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateCategory(Category category)
         {
-            await _repository.CreateCategoryAsync(category);
-            return Ok(category);
+            try
+            {
+                var c = await _categoryService.CreateCategory(category);
+
+                return Ok(c);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPut]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateCategory(Category category)
         {
-            if (await _repository.Categories.ContainsAsync(category))
+            try
             {
-                await _repository.UpdateCategoryAsync(category);
-                return Ok(category);
+                var c = await _categoryService.UpdateCategory(category);
+
+                if (category != null)
+                {
+                    return Ok(c);
+                }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteCategory(long id)
         {
-            if (_repository.Categories != null)
+            try
             {
-                Category? c = await _repository.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+                var category = await _categoryService.DeleteCategory(id);
 
-                if (c != null)
+                if (category != null)
                 {
-                    await _repository.DeleteCategoryAsync(c);
-                    return Ok(c);
+                    return Ok(category);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
     }
 }

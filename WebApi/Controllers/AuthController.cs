@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Core.Dto;
+using Core.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
-using WebApi.Models.Dto;
 
 namespace WebApi.Controllers
 {
@@ -14,12 +18,14 @@ namespace WebApi.Controllers
     public sealed class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
 
-        public AuthController(IConfiguration configuration, UserManager<IdentityUser> userManager)
+        public AuthController(IConfiguration configuration, UserManager<User> userManager, IMapper mapper)
         {
             _configuration = configuration;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         [HttpPost("login")]
@@ -29,6 +35,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> Login(UserDto request)
         {
             var user = await _userManager.FindByNameAsync(request.Username!);
+
             if (user == null)
             {
                 return NotFound($"No user with username {request.Username}");
@@ -37,9 +44,58 @@ namespace WebApi.Controllers
             {
                 return BadRequest($"Invalid password");
             }
-            string token = CreateToken(user);
 
-            return Ok(new JwtDto { Jwt = token });
+            string token = await CreateToken(user);
+
+            var refreshToken = GenerateRefreshToken();
+
+            await UpdateUserRefreshTokenAsync(user, refreshToken);
+
+            return Ok(new JwtDto { Jwt = token, RefreshToken = refreshToken });
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto request)
+        {
+            //var user = _mapper.Map<User>(request);
+
+            User user = new()
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                UserName = request.Username,
+                Email = request.Email,
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (result.Succeeded)
+            {
+            }
+            await _userManager.AddToRoleAsync(user, "Customer");
+
+
+            var temp = await _userManager.FindByNameAsync("string");
+            var roles = await _userManager.GetRolesAsync(temp!);
+
+            return Ok();
+        }
+
+        [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> RefreshJwt([FromBody] RefreshToken refreshToken)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken.Token && u.RefreshTokenExpired == refreshToken.Expired);
+
+            if (user != null)
+            {
+                string token = await CreateToken(user);
+
+                return Ok(new JwtDto { Jwt = token });
+            }
+
+            return Unauthorized();
         }
 
         [HttpPost("validate")]
@@ -63,6 +119,8 @@ namespace WebApi.Controllers
             return Ok(new JwtDto { Jwt = token.Jwt });
         }
 
+
+
         private TokenValidationParameters GetValidationParameters()
         {
             return new TokenValidationParameters()
@@ -75,13 +133,23 @@ namespace WebApi.Controllers
             };
         }
 
-        private string CreateToken(IdentityUser user)
+        private async Task<string> CreateToken(User user)
         {
+            var roles = await _userManager.GetRolesAsync(user);
             List<Claim> claims = new()
             {
                 new(ClaimTypes.Name, user.UserName!),
-                new(ClaimTypes.Role, "Admin")
+                new(ClaimTypes.Expiration, DateTime.Now.ToString()),
+
             };
+            List<Claim> rolesList = new();
+
+            foreach (var role in roles)
+            {
+                rolesList.Add(new(ClaimTypes.Role, role));
+            }
+
+            claims.AddRange(rolesList);
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecurityKey").Value!));
 
@@ -96,6 +164,26 @@ namespace WebApi.Controllers
             string jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
+        }
+
+
+        private static RefreshToken GenerateRefreshToken()
+        {
+            RefreshToken refreshToken = new()
+            {
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                Expired = DateTime.Now.AddHours(5),
+            };
+
+            return refreshToken;
+        }
+
+        private async Task UpdateUserRefreshTokenAsync(User user, RefreshToken refreshToken)
+        {
+            user.RefreshToken = refreshToken.Token;
+            user.RefreshTokenExpired = refreshToken.Expired;
+
+            await _userManager.UpdateAsync(user);
         }
     }
 }
