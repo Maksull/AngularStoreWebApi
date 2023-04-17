@@ -1,4 +1,4 @@
-﻿using Core.Dto;
+﻿using Core.Contracts.Controllers.Products;
 using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -69,11 +69,11 @@ namespace WebApi.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateProduct([FromForm] ProductDto productDto)
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProduct)
         {
             try
             {
-                var product = await _productService.CreateProduct(productDto);
+                var product = await _productService.CreateProduct(createProduct);
 
                 return Ok(product);
             }
@@ -87,11 +87,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateProduct([FromForm] ProductDto productDto)
+        public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductRequest updateProduct)
         {
             try
             {
-                var product = await _productService.UpdateProduct(productDto);
+                var product = await _productService.UpdateProduct(updateProduct);
 
                 if (product != null)
                 {

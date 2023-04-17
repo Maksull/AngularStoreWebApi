@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using Core.Contracts.Controllers.Categories;
+using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,11 +69,11 @@ namespace WebApi.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateCategory(Category category)
+        public async Task<IActionResult> CreateCategory(CreateCategoryRequest createCategory)
         {
             try
             {
-                var c = await _categoryService.CreateCategory(category);
+                var c = await _categoryService.CreateCategory(createCategory);
 
                 return Ok(c);
             }
@@ -86,13 +87,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Category))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateCategory(Category category)
+        public async Task<IActionResult> UpdateCategory(UpdateCategoryRequest updateCategory)
         {
             try
             {
-                var c = await _categoryService.UpdateCategory(category);
+                var c = await _categoryService.UpdateCategory(updateCategory);
 
-                if (category != null)
+                if (c != null)
                 {
                     return Ok(c);
                 }

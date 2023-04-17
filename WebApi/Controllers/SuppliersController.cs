@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using Core.Contracts.Controllers.Suppliers;
+using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,11 +69,11 @@ namespace WebApi.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateSupplier(Supplier supplier)
+        public async Task<IActionResult> CreateSupplier(CreateSupplierRequest createSupplier)
         {
             try
             {
-                var s = await _supplierService.CreateSupplier(supplier);
+                var s = await _supplierService.CreateSupplier(createSupplier);
 
                 return Ok(s);
             }
@@ -86,11 +87,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateSupplier(Supplier supplier)
+        public async Task<IActionResult> UpdateSupplier(UpdateSupplierRequest updateSupplier)
         {
             try
             {
-                var s = await _supplierService.UpdateSupplier(supplier);
+                var s = await _supplierService.UpdateSupplier(updateSupplier);
 
                 if (s != null)
                 {

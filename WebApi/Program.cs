@@ -1,12 +1,10 @@
+using Dependencies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
-using WebApi.Models;
-using Dependencies;
-using Infrastructure.AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,8 +30,6 @@ builder.Services.AddCors(opts => opts.AddPolicy("StoreOrigins", policy =>
 }));
 
 builder.Services.ConfigureDI(builder.Configuration, builder.Environment);
-
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
 builder.Services.AddAuthentication(opts =>
 {
@@ -80,6 +76,6 @@ app.MapControllers();
 
 #endregion
 
-app.MigrateDatabase();
+app.MigrateDb();
 
 app.Run();
