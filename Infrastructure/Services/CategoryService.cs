@@ -1,6 +1,8 @@
-﻿using Core.Entities;
+﻿using Core.Contracts.Controllers.Categories;
+using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.UnitOfWorks;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services
@@ -8,15 +10,17 @@ namespace Infrastructure.Services
     public sealed class CategoryService : ICategoryService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public CategoryService(IUnitOfWork unitOfWork)
+        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        public IEnumerable<Category>? GetCategories()
+        public IEnumerable<Category> GetCategories()
         {
-            if (_unitOfWork.Category.Categories != null)
+            if (_unitOfWork.Category.Categories.Any())
             {
                 IEnumerable<Category> categories = _unitOfWork.Category.Categories.Include(c => c.Products);
 
@@ -31,12 +35,12 @@ namespace Infrastructure.Services
                 return categories;
             }
 
-            return null;
+            return Enumerable.Empty<Category>();
         }
 
         public async Task<Category?> GetCategory(long id)
         {
-            if (_unitOfWork.Category.Categories != null)
+            if (_unitOfWork.Category.Categories.Any())
             {
                 Category? category = await _unitOfWork.Category.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.CategoryId == id);
 
@@ -54,14 +58,20 @@ namespace Infrastructure.Services
             return null;
         }
 
-        public async Task<Category> CreateCategory(Category category)
+        public async Task<Category> CreateCategory(CreateCategoryRequest createCategory)
         {
+            Category category = _mapper.Map<Category>(createCategory);
+
             await _unitOfWork.Category.CreateCategoryAsync(category);
 
             return category;
         }
-        public async Task<Category?> UpdateCategory(Category category)
+
+        public async Task<Category?> UpdateCategory(UpdateCategoryRequest updateCategory)
         {
+            Category category = _mapper.Map<Category>(updateCategory);
+
+
             if (await _unitOfWork.Category.Categories.ContainsAsync(category))
             {
                 await _unitOfWork.Category.UpdateCategoryAsync(category);
@@ -74,7 +84,7 @@ namespace Infrastructure.Services
 
         public async Task<Category?> DeleteCategory(long id)
         {
-            if (_unitOfWork.Category.Categories != null)
+            if (_unitOfWork.Category.Categories.Any())
             {
                 Category? category = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
 

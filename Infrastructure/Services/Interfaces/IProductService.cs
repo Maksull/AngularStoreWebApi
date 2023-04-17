@@ -1,4 +1,4 @@
-﻿using Core.Dto;
+﻿using Core.Contracts.Controllers.Products;
 using Core.Entities;
 
 namespace Infrastructure.Services.Interfaces
@@ -7,8 +7,8 @@ namespace Infrastructure.Services.Interfaces
     {
         IEnumerable<Product> GetProducts();
         Task<Product?> GetProduct(long id);
-        Task<Product> CreateProduct(ProductDto productDto);
-        Task<Product?> UpdateProduct(ProductDto productDto);
+        Task<Product> CreateProduct(CreateProductRequest productDto);
+        Task<Product?> UpdateProduct(UpdateProductRequest productDto);
         Task<Product?> DeleteProduct(long id);
 
     }

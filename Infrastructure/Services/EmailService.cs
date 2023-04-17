@@ -1,4 +1,4 @@
-﻿using Core.Dto;
+﻿using Core.Contracts.Services.EmailService;
 using Infrastructure.Services.Interfaces;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +16,7 @@ namespace Infrastructure.Services
             _configuration = configuration;
         }
 
-        public void Send(EmailDto request)
+        public void Send(EmailRequest request)
         {
             MimeMessage email = new();
             email.From.Add(MailboxAddress.Parse(_configuration.GetSection("EmailConfiguration:EmailUsername").Value));

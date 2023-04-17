@@ -1,6 +1,8 @@
-﻿using Core.Entities;
+﻿using Core.Contracts.Controllers.Suppliers;
+using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.UnitOfWorks;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services
@@ -8,15 +10,17 @@ namespace Infrastructure.Services
     public sealed class SupplierService : ISupplierService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public SupplierService(IUnitOfWork unitOfWork)
+        public SupplierService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        public IEnumerable<Supplier>? GetSuppliers()
+        public IEnumerable<Supplier> GetSuppliers()
         {
-            if (_unitOfWork.Supplier.Suppliers != null)
+            if (_unitOfWork.Supplier.Suppliers.Any())
             {
                 IEnumerable<Supplier> suppliers = _unitOfWork.Supplier.Suppliers.Include(s => s.Products);
 
@@ -31,12 +35,12 @@ namespace Infrastructure.Services
                 return suppliers;
             }
 
-            return null;
+            return Enumerable.Empty<Supplier>();
         }
 
         public async Task<Supplier?> GetSupplier(long id)
         {
-            if (_unitOfWork.Supplier.Suppliers != null)
+            if (_unitOfWork.Supplier.Suppliers.Any())
             {
                 Supplier? supplier = await _unitOfWork.Supplier.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
 
@@ -54,15 +58,19 @@ namespace Infrastructure.Services
             return null;
         }
 
-        public async Task<Supplier> CreateSupplier(Supplier supplier)
+        public async Task<Supplier> CreateSupplier(CreateSupplierRequest createSupplier)
         {
+            Supplier supplier = _mapper.Map<Supplier>(createSupplier);
+
             await _unitOfWork.Supplier.CreateSupplierAsync(supplier);
 
             return supplier;
         }
 
-        public async Task<Supplier?> UpdateSupplier(Supplier supplier)
+        public async Task<Supplier?> UpdateSupplier(UpdateSupplierRequest updateSupplier)
         {
+            Supplier supplier = _mapper.Map<Supplier>(updateSupplier);
+
             if (await _unitOfWork.Supplier.Suppliers.ContainsAsync(supplier))
             {
                 await _unitOfWork.Supplier.UpdateSupplierAsync(supplier);
@@ -75,7 +83,7 @@ namespace Infrastructure.Services
 
         public async Task<Supplier?> DeleteSupplier(long id)
         {
-            if (_unitOfWork.Supplier.Suppliers != null)
+            if (_unitOfWork.Supplier.Suppliers.Any())
             {
                 Supplier? supplier = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
 

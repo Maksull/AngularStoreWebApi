@@ -2,11 +2,6 @@
 using Infrastructure.Services.Interfaces;
 using Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
@@ -57,12 +52,7 @@ namespace Infrastructure.Services
         {
             await _unitOfWork.Order.CreateOrderAsync(order);
 
-            _emailService.Send(new()
-            {
-                To = order.Email,
-                Subject = "You have made an order",
-                Body = $"Your orderId is {order.OrderId}"
-            });
+            _emailService.Send(new(order.Email, "You have made an order", $"Your orderId is {order.OrderId}"));
 
             return order;
         }
@@ -81,7 +71,7 @@ namespace Infrastructure.Services
 
         public async Task<Order?> DeleteOrder(long id)
         {
-            if (_unitOfWork.Order.Orders != null)
+            if (_unitOfWork.Order.Orders.Any())
             {
                 Order? order = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
 

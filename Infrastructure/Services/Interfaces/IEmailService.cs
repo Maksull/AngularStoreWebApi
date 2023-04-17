@@ -1,9 +1,9 @@
-﻿using Core.Dto;
+﻿using Core.Contracts.Services.EmailService;
 
 namespace Infrastructure.Services.Interfaces
 {
     public interface IEmailService
     {
-        void Send(EmailDto request);
+        void Send(EmailRequest request);
     }
 }

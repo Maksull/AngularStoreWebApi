@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using Core.Dto;
+﻿using Core.Contracts.Controllers.Products;
 using Core.Entities;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.UnitOfWorks;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services
@@ -42,7 +42,7 @@ namespace Infrastructure.Services
 
         public async Task<Product?> GetProduct(long id)
         {
-            if (_unitOfWork.Product.Products != null)
+            if (_unitOfWork.Product.Products.Any())
             {
                 var product = await _unitOfWork.Product.Products
                                 .Include(p => p.Category)
@@ -61,27 +61,27 @@ namespace Infrastructure.Services
             return null;
         }
 
-        public async Task<Product> CreateProduct(ProductDto productDto)
+        public async Task<Product> CreateProduct(CreateProductRequest createProduct)
         {
-            Product product = _mapper.Map<Product>(productDto);
+            Product product = _mapper.Map<Product>(createProduct);
 
-            await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
+            await _s3Service.AddImageToBucket(createProduct.Img!, product.Images);
 
             await _unitOfWork.Product.CreateProductAsync(product);
 
             return product;
         }
 
-        public async Task<Product?> UpdateProduct(ProductDto productDto)
+        public async Task<Product?> UpdateProduct(UpdateProductRequest updateProduct)
         {
-            Product product = _mapper.Map<Product>(productDto);
+            Product product = _mapper.Map<Product>(updateProduct);
 
             if (await _unitOfWork.Product.Products.ContainsAsync(product))
             {
-                if (productDto.Img != null)
+                if (updateProduct.Img != null)
                 {
                     await _s3Service.DeleteImageFromBucket(await GetProductImagePath(product.ProductId));
-                    await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
+                    await _s3Service.AddImageToBucket(updateProduct.Img!, product.Images);
                 }
                 else
                 {
@@ -99,7 +99,7 @@ namespace Infrastructure.Services
 
         public async Task<Product?> DeleteProduct(long id)
         {
-            if (_unitOfWork.Product.Products != null)
+            if (_unitOfWork.Product.Products.Any())
             {
                 Product? product = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == id);
 
@@ -117,7 +117,7 @@ namespace Infrastructure.Services
 
         private async Task<string> GetProductImagePath(long id)
         {
-            if (_unitOfWork.Product.Products != null)
+            if (_unitOfWork.Product.Products.Any())
             {
                 Product? p = await _unitOfWork.Product.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
 
