@@ -66,7 +66,7 @@ namespace Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(8,2)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CategoryId = table.Column<long>(type: "bigint", nullable: false),
                     SupplierId = table.Column<long>(type: "bigint", nullable: false),
                     Images = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -94,7 +94,7 @@ namespace Infrastructure.Migrations
                 {
                     CartLineId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<long>(type: "bigint", nullable: true),
+                    ProductId = table.Column<long>(type: "bigint", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     OrderId = table.Column<long>(type: "bigint", nullable: false)
                 },
@@ -111,7 +111,8 @@ namespace Infrastructure.Migrations
                         name: "FK_CartLine_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
-                        principalColumn: "ProductId");
+                        principalColumn: "ProductId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
