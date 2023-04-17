@@ -1,29 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Entities
 {
     public sealed class Product
     {
-        [BindNever]
+        [Key]
         public long ProductId { get; set; }
-        [Required(ErrorMessage = "Name is required")]
-        public string? Name { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Description is required")]
-        public string? Description { get; set; } = string.Empty;
-        [Column(TypeName = "decimal(8,2)")]
-        [Required(ErrorMessage = "Price is required")]
-        public decimal? Price { get; set; }
-        [Required(ErrorMessage = "CategoryId is required")]
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public string Description { get; set; } = string.Empty;
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Price { get; set; }
+        [Required]
+        [ForeignKey(nameof(CategoryId))]
         public long CategoryId { get; set; }
-        [BindNever]
         public Category? Category { get; set; }
-        [Required(ErrorMessage = "SupplierId is required")]
+        [Required]
+        [ForeignKey(nameof(SupplierId))]
         public long SupplierId { get; set; }
-        [BindNever]
         public Supplier? Supplier { get; set; }
-        [Required(ErrorMessage = "Images are required")]
         public string Images { get; set; } = string.Empty;
     }
 }

@@ -1,27 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Core.Entities
 {
     public sealed class Order
     {
-        [BindNever]
+        [Key]
         public long OrderId { get; set; }
-        [Required(ErrorMessage = "Name is required")]
+        [Required]
         public string Name { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Email is required")]
+        [Required]
         public string Email { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Address is required")]
+        [Required]
         public string Address { get; set; } = string.Empty;
-        [Required(ErrorMessage = "City is required")]
+        [Required]
         public string City { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Country is required")]
+        [Required]
         public string Country { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Zip is required")]
+        [Required]
         public string Zip { get; set; } = string.Empty;
-        [BindNever]
+        [Required]
         public bool IsShipped { get; set; }
-        [BindNever]
         public IEnumerable<CartLine>? Lines { get; set; }
     }
 }

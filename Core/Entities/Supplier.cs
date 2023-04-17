@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Core.Entities
 {
     public sealed class Supplier
     {
-        [BindNever]
+        [Key]
         public long SupplierId { get; set; }
-        [Required(ErrorMessage = "Name is required")]
-        public string? Name { get; set; } = string.Empty;
-        [Required(ErrorMessage = "City is required")]
-        public string? City { get; set; } = string.Empty;
-        [BindNever]
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public string City { get; set; } = string.Empty;
         public IEnumerable<Product>? Products { get; set; }
     }
 }

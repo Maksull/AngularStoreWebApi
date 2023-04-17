@@ -1,15 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Core.Entities
 {
     public sealed class Category
     {
-        [BindNever]
+        [Key]
         public long CategoryId { get; set; }
-        [Required(ErrorMessage = "Name is required")]
-        public string? Name { get; set; } = string.Empty;
-        [BindNever]
+        [Required]
+        public string Name { get; set; } = string.Empty;
         public IEnumerable<Product>? Products { get; set; }
     }
 }
