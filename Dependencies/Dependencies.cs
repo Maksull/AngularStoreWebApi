@@ -7,6 +7,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Data;
 using Infrastructure.Mapster;
+using Infrastructure.Mediator.Handlers.Products;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Interfaces;
 using Infrastructure.Services;
@@ -33,6 +34,7 @@ namespace Dependencies
             services.ConfigureServices();
             services.ConfigureFluentValidation();
             services.ConfigureMapster();
+            services.ConfigureMediatR();
             services.ConfigureAwsS3Bucket(configuration, environment);
 
             return services;
@@ -138,6 +140,11 @@ namespace Dependencies
             {
                 return new ServiceMapper(sp, config);
             });
+        }
+
+        private static void ConfigureMediatR(this IServiceCollection services)
+        {
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<GetProductsHandler>());
         }
 
         private static void ConfigureAwsS3Bucket(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
