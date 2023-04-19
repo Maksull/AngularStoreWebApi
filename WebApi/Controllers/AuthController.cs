@@ -1,5 +1,6 @@
 ﻿using Core.Contracts.Controllers.Auth;
-using Infrastructure.Services.Interfaces;
+using Core.Mediator.Commands.Auth;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,11 +10,11 @@ namespace WebApi.Controllers
     [ApiController]
     public sealed class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IMediator mediator)
         {
-            _authService = authService;
+            _mediator = mediator;
         }
 
         [HttpPost("login")]
@@ -24,7 +25,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var result = await _authService.Login(request);
+                var result = await _mediator.Send(new LoginCommand(request));
 
                 if (result != null)
                 {
@@ -47,7 +48,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var result = await _authService.Register(request);
+                var result = await _mediator.Send(new RegisterCommand(request));
 
                 if (result)
                 {
@@ -67,11 +68,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(UnauthorizedResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> RefreshJwt([FromBody] RefreshTokenRequest refreshToken)
+        public async Task<IActionResult> RefreshJwt(RefreshTokenRequest refreshToken)
         {
             try
             {
-                var result = await _authService.Refresh(refreshToken);
+                var result = await _mediator.Send(new RefreshCommand(refreshToken));
 
                 if (result != null)
                 {

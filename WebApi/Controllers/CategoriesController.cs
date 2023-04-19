@@ -1,6 +1,8 @@
 ﻿using Core.Contracts.Controllers.Categories;
 using Core.Entities;
-using Infrastructure.Services.Interfaces;
+using Core.Mediator.Commands.Categories;
+using Core.Mediator.Queries.Categories;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,11 +13,11 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class CategoriesController : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
+        private readonly IMediator _mediator;
 
-        public CategoriesController(ICategoryService categoryService)
+        public CategoriesController(IMediator mediator)
         {
-            _categoryService = categoryService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -23,13 +25,13 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Category>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public IActionResult GetCategories()
+        public async Task<IActionResult> GetCategories()
         {
             try
             {
-                var categories = _categoryService.GetCategories();
+                var categories = await _mediator.Send(new GetCategoriesQuery());
 
-                if (categories != null)
+                if (categories.Any())
                 {
                     return Ok(categories);
                 }
@@ -51,7 +53,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var category = await _categoryService.GetCategory(id);
+                var category = await _mediator.Send(new GetCategoryByIdQuery(id));
 
                 if (category != null)
                 {
@@ -73,7 +75,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var c = await _categoryService.CreateCategory(createCategory);
+                var c = await _mediator.Send(new CreateCategoryCommand(createCategory));
 
                 return Ok(c);
             }
@@ -91,7 +93,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var c = await _categoryService.UpdateCategory(updateCategory);
+                var c = await _mediator.Send(new UpdateCategoryCommand(updateCategory));
 
                 if (c != null)
                 {
@@ -114,7 +116,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var category = await _categoryService.DeleteCategory(id);
+                var category = await _mediator.Send(new DeleteCategoryCommand(id));
 
                 if (category != null)
                 {

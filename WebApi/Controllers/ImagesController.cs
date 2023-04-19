@@ -1,4 +1,6 @@
-﻿using Infrastructure.Services.Interfaces;
+﻿using Core.Mediator.Commands.Images;
+using Core.Mediator.Queries.Images;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,11 +11,11 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class ImagesController : ControllerBase
     {
-        private readonly IImageService _imageService;
+        private readonly IMediator _mediator;
 
-        public ImagesController(IImageService imageService)
+        public ImagesController(IMediator mediator)
         {
-            _imageService = imageService;
+            _mediator = mediator;
         }
 
         [HttpPost("upload")]
@@ -24,7 +26,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var f = await _imageService.UploadFile(file);
+                var f = await _mediator.Send(new UploadFileCommand(file));
 
                 if (f != null)
                 {
@@ -48,7 +50,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var file = await _imageService.GetFile(key);
+                var file = await _mediator.Send(new GetFileQuery(key));
 
                 if (file != null)
                 {

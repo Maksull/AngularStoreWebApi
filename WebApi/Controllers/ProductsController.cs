@@ -1,6 +1,8 @@
 ﻿using Core.Contracts.Controllers.Products;
 using Core.Entities;
-using Infrastructure.Services.Interfaces;
+using Core.Mediator.Commands.Products;
+using Core.Mediator.Queries.Products;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,11 +13,11 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class ProductsController : ControllerBase
     {
-        private readonly IProductService _productService;
+        private readonly IMediator _mediator;
 
-        public ProductsController(IProductService productService)
+        public ProductsController(IMediator mediator)
         {
-            _productService = productService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -23,11 +25,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Product>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public IActionResult GetProducts()
+        public async Task<IActionResult> GetProducts()
         {
             try
             {
-                var products = _productService.GetProducts();
+                var products = await _mediator.Send(new GetProductsQuery());
 
                 if (products.Any())
                 {
@@ -51,7 +53,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var product = await _productService.GetProduct(id);
+                var product = await _mediator.Send(new GetProductByIdQuery(id));
 
                 if (product != null)
                 {
@@ -73,7 +75,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var product = await _productService.CreateProduct(createProduct);
+                var product = await _mediator.Send(new CreateProductCommand(createProduct));
 
                 return Ok(product);
             }
@@ -91,7 +93,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var product = await _productService.UpdateProduct(updateProduct);
+                var product = await _mediator.Send(new UpdateProductCommand(updateProduct));
 
                 if (product != null)
                 {
@@ -114,7 +116,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var product = await _productService.DeleteProduct(id);
+                var product = await _mediator.Send(new DeleteProductCommand(id));
 
                 if (product != null)
                 {

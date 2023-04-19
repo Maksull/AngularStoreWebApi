@@ -1,6 +1,8 @@
 ﻿using Core.Contracts.Controllers.Suppliers;
 using Core.Entities;
-using Infrastructure.Services.Interfaces;
+using Core.Mediator.Commands.Suppliers;
+using Core.Mediator.Queries.Suppliers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,11 +13,11 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class SuppliersController : ControllerBase
     {
-        private readonly ISupplierService _supplierService;
+        private readonly IMediator _mediator;
 
-        public SuppliersController(ISupplierService supplierService)
+        public SuppliersController(IMediator mediator)
         {
-            _supplierService = supplierService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -23,15 +25,15 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Supplier>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public IActionResult GetSuppliers()
+        public async Task<IActionResult> GetSuppliers()
         {
             try
             {
-                var products = _supplierService.GetSuppliers();
+                var suppliers = await _mediator.Send(new GetSuppliersQuery());
 
-                if (products != null)
+                if (suppliers.Any())
                 {
-                    return Ok(products);
+                    return Ok(suppliers);
                 }
 
                 return NotFound();
@@ -51,7 +53,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var supplier = await _supplierService.GetSupplier(id);
+                var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
 
                 if (supplier != null)
                 {
@@ -73,7 +75,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var s = await _supplierService.CreateSupplier(createSupplier);
+                var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
 
                 return Ok(s);
             }
@@ -91,7 +93,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var s = await _supplierService.UpdateSupplier(updateSupplier);
+                var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
 
                 if (s != null)
                 {
@@ -114,7 +116,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var supplier = await _supplierService.DeleteSupplier(id);
+                var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
 
                 if (supplier != null)
                 {

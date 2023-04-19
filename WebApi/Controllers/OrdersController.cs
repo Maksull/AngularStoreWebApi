@@ -1,5 +1,8 @@
-﻿using Core.Entities;
-using Infrastructure.Services.Interfaces;
+﻿using Core.Contracts.Controllers.Orders;
+using Core.Entities;
+using Core.Mediator.Commands.Orders;
+using Core.Mediator.Queries.Orders;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,24 +13,24 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class OrdersController : ControllerBase
     {
-        private readonly IOrderService _orderService;
+        private readonly IMediator _mediator;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(IMediator mediator)
         {
-            _orderService = orderService;
+            _mediator = mediator;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public IActionResult GetOrders()
+        public async Task<IActionResult> GetOrders()
         {
             try
             {
-                var orders = _orderService.GetOrders();
+                var orders = await _mediator.Send(new GetOrdersQuery());
 
-                if (orders != null)
+                if (orders.Any())
                 {
                     return Ok(orders);
                 }
@@ -48,7 +51,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var order = await _orderService.GetOrder(id);
+                var order = await _mediator.Send(new GetOrderByIdQuery(id));
 
                 if (order != null)
                 {
@@ -67,11 +70,11 @@ namespace WebApi.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateOrder(Order order)
+        public async Task<IActionResult> CreateOrder(CreateOrderRequest order)
         {
             try
             {
-                var o = await _orderService.CreateOrder(order);
+                var o = await _mediator.Send(new CreateOrderCommand(order));
 
                 return Ok(o);
             }
@@ -85,11 +88,11 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateOrder(Order order)
+        public async Task<IActionResult> UpdateOrder(UpdateOrderRequest order)
         {
             try
             {
-                var o = await _orderService.UpdateOrder(order);
+                var o = await _mediator.Send(new UpdateOrderCommand(order));
 
                 if (o != null)
                 {
@@ -112,7 +115,7 @@ namespace WebApi.Controllers
         {
             try
             {
-                var order = await _orderService.DeleteOrder(id);
+                var order = await _mediator.Send(new DeleteOrderCommand(id));
 
                 if (order != null)
                 {
