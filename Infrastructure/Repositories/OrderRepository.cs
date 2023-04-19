@@ -1,6 +1,7 @@
 ﻿using Core.Entities;
 using Infrastructure.Data;
 using Infrastructure.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -17,12 +18,6 @@ namespace Infrastructure.Repositories
 
         public async Task CreateOrderAsync(Order order)
         {
-            foreach (var l in order.Lines!)
-            {
-                l.Product!.Category = null;
-                l.Product!.Supplier = null;
-            }
-            _context.AttachRange(order.Lines!.Select(l => l.Product!));
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
         }
