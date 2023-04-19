@@ -20,6 +20,6 @@ namespace Core.Entities
         public string Zip { get; set; } = string.Empty;
         [Required]
         public bool IsShipped { get; set; }
-        public IEnumerable<CartLine>? Lines { get; set; }
+        public required ICollection<CartLine> Lines { get; set; }
     }
 }

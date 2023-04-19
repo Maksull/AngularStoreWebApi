@@ -1,5 +1,6 @@
 ﻿using Core.Contracts.Controllers.Auth;
 using Core.Contracts.Controllers.Categories;
+using Core.Contracts.Controllers.Orders;
 using Core.Contracts.Controllers.Products;
 using Core.Contracts.Controllers.Suppliers;
 using Core.Entities;
@@ -23,6 +24,14 @@ namespace Infrastructure.Mapster
 
             config.ForType<CreateSupplierRequest, Supplier>();
             config.ForType<UpdateSupplierRequest, Supplier>();
+
+
+            config.ForType<CreateOrderRequest, Order>();
+            config.ForType<UpdateOrderRequest, Order>();
+
+
+            config.ForType<CreateCartLineRequest, CartLine>();
+            config.ForType<UpdateCartLineRequest, CartLine>();
 
 
             config.ForType<RegisterRequest, User>()
