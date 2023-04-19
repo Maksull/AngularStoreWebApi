@@ -36,6 +36,7 @@ namespace Dependencies
             services.ConfigureMapster();
             services.ConfigureMediatR();
             services.ConfigureAwsS3Bucket(configuration, environment);
+            services.ConfigureRedisCache(configuration);
 
             return services;
         }
@@ -118,6 +119,7 @@ namespace Dependencies
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IImageService, ImageService>();
 
+            services.AddScoped<ICacheService, CacheService>();
 
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IS3Service, S3Service>();
@@ -161,6 +163,14 @@ namespace Dependencies
                 services.AddDefaultAWSOptions(configuration.GetAWSOptions());
                 services.AddAWSService<IAmazonS3>();
             }
+        }
+
+        private static void ConfigureRedisCache(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddStackExchangeRedisCache(opts =>
+            {
+                opts.Configuration = configuration.GetConnectionString("RedisCache");
+            });
         }
     }
 }

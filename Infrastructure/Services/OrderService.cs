@@ -12,42 +12,46 @@ namespace Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
+        private readonly ICacheService _cacheService;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService)
+        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _emailService = emailService;
+            _cacheService = cacheService;
         }
 
         public IEnumerable<Order> GetOrders()
         {
-            if (_unitOfWork.Order.Orders.Any())
-            {
-                return _unitOfWork.Order.Orders
-                    .Include(o => o.Lines)!
-                        .ThenInclude(l => l.Product);
-            }
-
-            return Enumerable.Empty<Order>();
+            return _unitOfWork.Order.Orders
+                .Include(o => o.Lines)!
+                    .ThenInclude(l => l.Product);
         }
 
         public async Task<Order?> GetOrder(long id)
         {
-            if (_unitOfWork.Order.Orders.Any())
-            {
-                Order? order = await _unitOfWork.Order.Orders
-                    .Include(o => o.Lines)!
-                        .ThenInclude(l => l.Product)
-                        .FirstOrDefaultAsync(o => o.OrderId == id);
+            string key = $"OrderId={id}";
 
-                if (order != null)
-                {
-                    return order;
-                }
+            var cachedOrder = await _cacheService.GetAsync<Order>(key);
+
+            if (cachedOrder != null)
+            {
+                return cachedOrder;
             }
 
-            return null;
+            Order? order = await _unitOfWork.Order.Orders
+                .Include(o => o.Lines)!
+                    .ThenInclude(l => l.Product)
+                    .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order != null)
+            {
+
+                await _cacheService.SetAsync(key, order);
+            }
+
+            return order;
         }
 
         public async Task<Order> CreateOrder(CreateOrderRequest createOrder)
@@ -77,19 +81,18 @@ namespace Infrastructure.Services
 
         public async Task<Order?> DeleteOrder(long id)
         {
-            if (_unitOfWork.Order.Orders.Any())
+            Order? order = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order != null)
             {
-                Order? order = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+                string key = $"OrderId={id}";
 
-                if (order != null)
-                {
-                    await _unitOfWork.Order.DeleteOrderAsync(order);
+                await _unitOfWork.Order.DeleteOrderAsync(order);
 
-                    return order;
-                }
+                await _cacheService.RemoveAsync(key);
             }
 
-            return null;
+            return order;
         }
     }
 }

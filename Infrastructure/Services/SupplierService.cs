@@ -11,51 +11,54 @@ namespace Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cacheService;
 
-        public SupplierService(IUnitOfWork unitOfWork, IMapper mapper)
+        public SupplierService(IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _cacheService = cacheService;
         }
 
         public IEnumerable<Supplier> GetSuppliers()
         {
-            if (_unitOfWork.Supplier.Suppliers.Any())
+            IEnumerable<Supplier> suppliers = _unitOfWork.Supplier.Suppliers.Include(s => s.Products);
+
+            foreach (var s in suppliers)
             {
-                IEnumerable<Supplier> suppliers = _unitOfWork.Supplier.Suppliers.Include(s => s.Products);
-
-                foreach (var s in suppliers)
+                foreach (var p in s.Products!)
                 {
-                    foreach (var p in s.Products!)
-                    {
-                        p.Supplier = null;
-                    }
+                    p.Supplier = null;
                 }
-
-                return suppliers;
             }
 
-            return Enumerable.Empty<Supplier>();
+            return suppliers;
         }
 
         public async Task<Supplier?> GetSupplier(long id)
         {
-            if (_unitOfWork.Supplier.Suppliers.Any())
+            string key = $"SupplierId={id}";
+
+            var cachedSupplier = await _cacheService.GetAsync<Supplier>(key);
+
+            if (cachedSupplier != null)
             {
-                Supplier? supplier = await _unitOfWork.Supplier.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
-
-                if (supplier != null)
-                {
-                    foreach (var p in supplier.Products!)
-                    {
-                        p.Supplier = null;
-                    }
-
-                    return supplier;
-                }
+                return cachedSupplier;
             }
 
-            return null;
+            Supplier? supplier = await _unitOfWork.Supplier.Suppliers.Include(s => s.Products).FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier != null)
+            {
+                foreach (var p in supplier.Products!)
+                {
+                    p.Supplier = null;
+                }
+
+                await _cacheService.SetAsync(key, supplier);
+            }
+
+            return supplier;
         }
 
         public async Task<Supplier> CreateSupplier(CreateSupplierRequest createSupplier)
@@ -83,16 +86,17 @@ namespace Infrastructure.Services
 
         public async Task<Supplier?> DeleteSupplier(long id)
         {
-            if (_unitOfWork.Supplier.Suppliers.Any())
+            Supplier? supplier = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier != null)
             {
-                Supplier? supplier = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
+                string key = $"SupplierId={id}";
 
-                if (supplier != null)
-                {
-                    await _unitOfWork.Supplier.DeleteSupplierAsync(supplier);
+                await _unitOfWork.Supplier.DeleteSupplierAsync(supplier);
 
-                    return supplier;
-                }
+                await _cacheService.RemoveAsync(key);
+
+                return supplier;
             }
 
             return null;

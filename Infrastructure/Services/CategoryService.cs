@@ -11,51 +11,54 @@ namespace Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cacheService;
 
-        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
+        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _cacheService = cacheService;
         }
 
         public IEnumerable<Category> GetCategories()
         {
-            if (_unitOfWork.Category.Categories.Any())
+            IEnumerable<Category> categories = _unitOfWork.Category.Categories.Include(c => c.Products);
+
+            foreach (var c in categories)
             {
-                IEnumerable<Category> categories = _unitOfWork.Category.Categories.Include(c => c.Products);
-
-                foreach (var c in categories)
+                foreach (var p in c.Products!)
                 {
-                    foreach (var p in c.Products!)
-                    {
-                        p.Category = null;
-                    }
+                    p.Category = null;
                 }
-
-                return categories;
             }
 
-            return Enumerable.Empty<Category>();
+            return categories;
         }
 
         public async Task<Category?> GetCategory(long id)
         {
-            if (_unitOfWork.Category.Categories.Any())
+            string key = $"CategoryId={id}";
+
+            var cachedCategory = await _cacheService.GetAsync<Category>(key);
+
+            if (cachedCategory != null)
             {
-                Category? category = await _unitOfWork.Category.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.CategoryId == id);
-
-                if (category != null)
-                {
-                    foreach (var p in category.Products!)
-                    {
-                        p.Category = null;
-                    }
-
-                    return category;
-                }
+                return cachedCategory;
             }
 
-            return null;
+            Category? category = await _unitOfWork.Category.Categories.Include(s => s.Products).FirstOrDefaultAsync(s => s.CategoryId == id);
+
+            if (category != null)
+            {
+                foreach (var p in category.Products!)
+                {
+                    p.Category = null;
+                }
+
+                await _cacheService.SetAsync(key, category);
+            }
+
+            return category;
         }
 
         public async Task<Category> CreateCategory(CreateCategoryRequest createCategory)
@@ -71,7 +74,6 @@ namespace Infrastructure.Services
         {
             Category category = _mapper.Map<Category>(updateCategory);
 
-
             if (await _unitOfWork.Category.Categories.ContainsAsync(category))
             {
                 await _unitOfWork.Category.UpdateCategoryAsync(category);
@@ -84,15 +86,17 @@ namespace Infrastructure.Services
 
         public async Task<Category?> DeleteCategory(long id)
         {
-            if (_unitOfWork.Category.Categories.Any())
-            {
-                Category? category = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+            Category? category = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
 
-                if (category != null)
-                {
-                    await _unitOfWork.Category.DeleteCategoryAsync(category);
-                    return category;
-                }
+            if (category != null)
+            {
+                string key = $"CategoryId={id}";
+
+                await _unitOfWork.Category.DeleteCategoryAsync(category);
+
+                await _cacheService.RemoveAsync(key);
+
+                return category;
             }
 
             return null;

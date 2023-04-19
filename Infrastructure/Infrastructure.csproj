@@ -27,6 +27,7 @@
 		<PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.2" />
 		<PackageReference Include="AWSSDK.S3" Version="3.7.101.33" />
 		<PackageReference Include="MailKit" Version="3.4.3" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>

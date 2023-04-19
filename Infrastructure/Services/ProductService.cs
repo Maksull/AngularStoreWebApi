@@ -12,53 +12,56 @@ namespace Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IS3Service _s3Service;
+        private readonly ICacheService _cacheService;
 
-        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IS3Service s3Service)
+        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IS3Service s3Service, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _s3Service = s3Service;
+            _cacheService = cacheService;
         }
 
         public IEnumerable<Product> GetProducts()
         {
-            if (_unitOfWork.Product.Products.Any())
+            var products = _unitOfWork.Product.Products
+                            .Include(p => p.Category)
+                            .Include(p => p.Supplier);
+
+            foreach (var p in products)
             {
-                var products = _unitOfWork.Product.Products
-                                .Include(p => p.Category)
-                                .Include(p => p.Supplier);
-
-                foreach (var p in products)
-                {
-                    p.Category!.Products = null;
-                    p.Supplier!.Products = null;
-                }
-
-                return products;
+                p.Category!.Products = null;
+                p.Supplier!.Products = null;
             }
 
-            return Enumerable.Empty<Product>();
+            return products;
         }
 
         public async Task<Product?> GetProduct(long id)
         {
-            if (_unitOfWork.Product.Products.Any())
+            string key = $"ProductId={id}";
+
+            var cachedProduct = await _cacheService.GetAsync<Product>(key);
+
+            if (cachedProduct != null)
             {
-                var product = await _unitOfWork.Product.Products
-                                .Include(p => p.Category)
-                                .Include(p => p.Supplier)
-                                .FirstOrDefaultAsync(p => p.ProductId == id);
-
-                if (product != null)
-                {
-                    product.Category!.Products = null;
-                    product.Supplier!.Products = null;
-                }
-
-                return product;
+                return cachedProduct;
             }
 
-            return null;
+            Product? product = await _unitOfWork.Product.Products
+                .Include(p => p.Category)
+                .Include(p => p.Supplier)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (product != null)
+            {
+                product.Category!.Products = null;
+                product.Supplier!.Products = null;
+
+                await _cacheService.SetAsync(key, product);
+            }
+
+            return product;
         }
 
         public async Task<Product> CreateProduct(CreateProductRequest createProduct)
@@ -99,33 +102,30 @@ namespace Infrastructure.Services
 
         public async Task<Product?> DeleteProduct(long id)
         {
-            if (_unitOfWork.Product.Products.Any())
+            Product? product = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (product != null)
             {
-                Product? product = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+                string key = $"ProductId={id}";
 
-                if (product != null)
-                {
-                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(id));
-                    await _unitOfWork.Product.DeleteProductAsync(product);
+                await _s3Service.DeleteImageFromBucket(await GetProductImagePath(id));
+                await _unitOfWork.Product.DeleteProductAsync(product);
 
-                    return product;
-                }
+                await _cacheService.RemoveAsync(key);
             }
 
-            return null;
+            return product;
         }
 
         private async Task<string> GetProductImagePath(long id)
         {
-            if (_unitOfWork.Product.Products.Any())
-            {
-                Product? p = await _unitOfWork.Product.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+            Product? p = await _unitOfWork.Product.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
 
-                if (p != null)
-                {
-                    return p.Images;
-                }
+            if (p != null)
+            {
+                return p.Images;
             }
+
             return string.Empty;
         }
     }
