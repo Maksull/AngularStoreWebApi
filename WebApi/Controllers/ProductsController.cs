@@ -81,7 +81,7 @@ namespace WebApi.Controllers
             }
             catch (Exception ex)
             {
-                return Problem(ex.InnerException!.ToString());
+                return Problem(ex.Message);
             }
         }
 
