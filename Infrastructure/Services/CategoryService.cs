@@ -74,7 +74,9 @@ namespace Infrastructure.Services
         {
             Category category = _mapper.Map<Category>(updateCategory);
 
-            if (await _unitOfWork.Category.Categories.ContainsAsync(category))
+            var t = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId);
+
+            if (t != null)
             {
                 await _unitOfWork.Category.UpdateCategoryAsync(category);
 

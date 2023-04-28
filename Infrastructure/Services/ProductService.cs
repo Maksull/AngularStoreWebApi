@@ -79,7 +79,9 @@ namespace Infrastructure.Services
         {
             Product product = _mapper.Map<Product>(updateProduct);
 
-            if (await _unitOfWork.Product.Products.ContainsAsync(product))
+            var t = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
+
+            if (t != null)
             {
                 if (updateProduct.Img != null)
                 {

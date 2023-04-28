@@ -74,7 +74,9 @@ namespace Infrastructure.Services
         {
             Supplier supplier = _mapper.Map<Supplier>(updateSupplier);
 
-            if (await _unitOfWork.Supplier.Suppliers.ContainsAsync(supplier))
+            var t = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == supplier.SupplierId);
+
+            if (t != null)
             {
                 await _unitOfWork.Supplier.UpdateSupplierAsync(supplier);
 
