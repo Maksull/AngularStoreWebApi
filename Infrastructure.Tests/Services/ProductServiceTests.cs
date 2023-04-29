@@ -217,7 +217,15 @@ namespace Infrastructure.Tests.Services
             {
                 new()
                 {
-                    ProductId = 1, Name = "First", Description = "Desc", Price = 1 , CategoryId = 1, SupplierId = 1
+                    ProductId = 1, Name = "First", Description = "Desc", Price = 1 , Category = new(), CategoryId = 1, Supplier = new(),  SupplierId = 1
+                },
+                new()
+                {
+                    ProductId = 2, Name = "First", Description = "Desc", Price = 1, Category = new(), CategoryId = 1, Supplier = new(), SupplierId = 1
+                },
+                new()
+                {
+                    ProductId = 3, Name = "First", Description = "Desc", Price = 1 , Category = new(), CategoryId = 1, Supplier = new(), SupplierId = 1
                 },
             };
 

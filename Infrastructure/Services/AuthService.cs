@@ -83,7 +83,7 @@ namespace Infrastructure.Services
 
         private async Task<string> CreateToken(User user)
         {
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _userManager.GetRolesAsync(user) ?? new List<string>();
             List<Claim> claims = new()
             {
                 new(ClaimTypes.Name, user.UserName!),

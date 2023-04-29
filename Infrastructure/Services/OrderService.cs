@@ -69,7 +69,9 @@ namespace Infrastructure.Services
         {
             var order = _mapper.Map<Order>(updateOrder);
 
-            if (await _unitOfWork.Order.Orders.ContainsAsync(order))
+            var t = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(s => s.OrderId == order.OrderId);
+
+            if (t != null)
             {
                 await _unitOfWork.Order.UpdateOrderAsync(order);
 

@@ -193,9 +193,21 @@ namespace Infrastructure.Tests.Services
         public void DeleteCategory_WhenCalled_ReturnCategory()
         {
             //Arrange
-            UpdateCategoryRequest updateCategory = new(1, "First");
-
-            Category[] categories = { new() { CategoryId = updateCategory.CategoryId, Name = updateCategory.Name } };
+            Category[] categories = new Category[]
+            {
+                new()
+                {
+                    CategoryId = 1, Name = "First", Products = new List<Product>()
+                },
+                new()
+                {
+                    CategoryId = 2, Name = "Second", Products = new List<Product>()
+                },
+                new()
+                {
+                    CategoryId = 3, Name = "Third", Products = new List<Product>()
+                },
+            };
 
             var mock = categories.AsQueryable().BuildMock();
 

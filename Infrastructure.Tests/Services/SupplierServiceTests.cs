@@ -195,9 +195,21 @@ namespace Infrastructure.Tests.Services
         public void DeleteSupplier_WhenCalled_ReturnSupplier()
         {
             //Arrange
-            UpdateSupplierRequest updateSupplier = new(1, "First", "TestCity");
-
-            Supplier[] suppliers = { new() { SupplierId = updateSupplier.SupplierId, Name = updateSupplier.Name, City = updateSupplier.City } };
+            Supplier[] suppliers = new Supplier[]
+            {
+                new()
+                {
+                    SupplierId = 1, Name = "First", City = "CityFirst", Products = new List<Product>()
+                },
+                new()
+                {
+                    SupplierId = 2, Name = "Second", City = "CityFirst", Products = new List<Product>()
+                },
+                new()
+                {
+                    SupplierId = 3, Name = "Third", City = "CityFirst", Products = new List<Product>()
+                },
+            };
 
             var mock = suppliers.AsQueryable().BuildMock();
 
