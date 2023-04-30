@@ -69,7 +69,7 @@ namespace Infrastructure.Services
         {
             var order = _mapper.Map<Order>(updateOrder);
 
-            var t = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(s => s.OrderId == order.OrderId);
+            var t = await _unitOfWork.Order.Orders.AsNoTracking().FirstOrDefaultAsync(s => s.OrderId == order.OrderId);
 
             if (t != null)
             {
@@ -83,7 +83,7 @@ namespace Infrastructure.Services
 
         public async Task<Order?> DeleteOrder(long id)
         {
-            Order? order = await _unitOfWork.Order.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+            Order? order = await _unitOfWork.Order.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order != null)
             {

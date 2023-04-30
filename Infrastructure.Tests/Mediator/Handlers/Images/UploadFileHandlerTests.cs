@@ -26,7 +26,7 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
             IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
-            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>()))
+            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>(), It.IsAny<string>()))
                 .ReturnsAsync(file);
 
             //Act
@@ -43,7 +43,7 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
             IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
-            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>()))
+            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>(), It.IsAny<string>()))
                 .ReturnsAsync((IFormFile)null!);
 
             //Act

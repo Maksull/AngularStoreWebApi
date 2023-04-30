@@ -16,7 +16,7 @@ namespace Infrastructure.Mediator.Handlers.Images
 
         public async Task<IFormFile?> Handle(UploadFileCommand request, CancellationToken cancellationToken)
         {
-            return await _imageService.UploadFile(request.File);
+            return await _imageService.UploadFile(request.File, request.File.FileName);
         }
     }
 }

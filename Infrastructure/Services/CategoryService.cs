@@ -74,7 +74,7 @@ namespace Infrastructure.Services
         {
             Category category = _mapper.Map<Category>(updateCategory);
 
-            var t = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId);
+            var t = await _unitOfWork.Category.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId);
 
             if (t != null)
             {
@@ -88,7 +88,7 @@ namespace Infrastructure.Services
 
         public async Task<Category?> DeleteCategory(long id)
         {
-            Category? category = await _unitOfWork.Category.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+            Category? category = await _unitOfWork.Category.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
 
             if (category != null)
             {

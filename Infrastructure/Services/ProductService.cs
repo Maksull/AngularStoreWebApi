@@ -68,7 +68,7 @@ namespace Infrastructure.Services
         {
             Product product = _mapper.Map<Product>(createProduct);
 
-            await _imageService.UploadFile(createProduct.Img!);
+            await _imageService.UploadFile(createProduct.Img!, product.Images);
 
             await _unitOfWork.Product.CreateProductAsync(product);
 
@@ -79,14 +79,14 @@ namespace Infrastructure.Services
         {
             Product product = _mapper.Map<Product>(updateProduct);
 
-            var t = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
+            var t = await _unitOfWork.Product.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
 
             if (t != null)
             {
                 if (updateProduct.Img != null)
                 {
                     await _imageService.DeleteFile(await GetProductImagePath(product.ProductId));
-                    await _imageService.UploadFile(updateProduct.Img!);
+                    await _imageService.UploadFile(updateProduct.Img!, product.Images);
                 }
                 else
                 {
@@ -104,7 +104,7 @@ namespace Infrastructure.Services
 
         public async Task<Product?> DeleteProduct(long id)
         {
-            Product? product = await _unitOfWork.Product.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            Product? product = await _unitOfWork.Product.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product != null)
             {

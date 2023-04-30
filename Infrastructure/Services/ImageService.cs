@@ -36,14 +36,14 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<IFormFile?> UploadFile(IFormFile file)
+        public async Task<IFormFile?> UploadFile(IFormFile file, string path)
         {
             if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
             {
                 PutObjectRequest request = new()
                 {
                     BucketName = _s3BucketName,
-                    Key = $"{file.FileName}",
+                    Key = path,
                     InputStream = file.OpenReadStream(),
                 };
                 request.Metadata.Add("Content-Type", file.ContentType);

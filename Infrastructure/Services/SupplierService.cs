@@ -74,7 +74,7 @@ namespace Infrastructure.Services
         {
             Supplier supplier = _mapper.Map<Supplier>(updateSupplier);
 
-            var t = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == supplier.SupplierId);
+            var t = await _unitOfWork.Supplier.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == supplier.SupplierId);
 
             if (t != null)
             {
@@ -88,7 +88,7 @@ namespace Infrastructure.Services
 
         public async Task<Supplier?> DeleteSupplier(long id)
         {
-            Supplier? supplier = await _unitOfWork.Supplier.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id);
+            Supplier? supplier = await _unitOfWork.Supplier.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == id);
 
             if (supplier != null)
             {

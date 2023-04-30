@@ -98,7 +98,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = (await _imageService.UploadFile(file))!;
+            var result = (await _imageService.UploadFile(file, ""))!;
 
             // Assert
             result.Should().BeOfType<FormFile>();
@@ -116,7 +116,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = (await _imageService.UploadFile(file))!;
+            var result = (await _imageService.UploadFile(file, ""))!;
 
             // Assert
             result.Should().BeNull();
