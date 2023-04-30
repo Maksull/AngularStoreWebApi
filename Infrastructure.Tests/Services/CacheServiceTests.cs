@@ -1,17 +1,12 @@
-﻿using Amazon.Runtime.Internal.Util;
-using Core.Entities;
+﻿using Core.Entities;
 using Infrastructure.Services;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Moq;
-using System.Text.Json;
-using System.Threading;
 
 namespace Infrastructure.Tests.Services
 {
-    public class CacheServiceTests
+    public sealed class CacheServiceTests
     {
         private readonly IDistributedCache _cache;
         private readonly CacheService _cacheService;
