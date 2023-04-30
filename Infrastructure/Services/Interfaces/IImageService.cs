@@ -7,5 +7,6 @@ namespace Infrastructure.Services.Interfaces
     {
         Task<GetObjectResponse?> GetFile(string key);
         Task<IFormFile?> UploadFile(IFormFile file);
+        Task<bool> DeleteFile(string path);
     }
 }

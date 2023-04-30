@@ -106,7 +106,7 @@ namespace Infrastructure.Tests.Services
         }
 
         [Fact]
-        public async Task GetFile_WhenBucketNotExists_Null()
+        public async Task UploadFile_WhenBucketNotExists_ReturnNull()
         {
             // Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
@@ -120,6 +120,39 @@ namespace Infrastructure.Tests.Services
 
             // Assert
             result.Should().BeNull();
+        }
+
+        #endregion
+
+
+        #region DeleteFile
+
+        [Fact]
+        public async Task DeleteFile_WhenBucketExists_ReturnTrue()
+        {
+            // Arrange
+            _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _imageService.DeleteFile("");
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DeleteFile_WhenBucketNotExists_ReturnFalse()
+        {
+            // Arrange
+            _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _imageService.DeleteFile("");
+
+            // Assert
+            result.Should().BeFalse();
         }
 
         #endregion

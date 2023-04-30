@@ -54,5 +54,15 @@ namespace Infrastructure.Services
 
             return null;
         }
+
+        public async Task<bool> DeleteFile(string path)
+        {
+            if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
+            {
+                await _s3Client.DeleteObjectAsync(_s3BucketName, path);
+                return true;
+            }
+            return false;
+        }
     }
 }

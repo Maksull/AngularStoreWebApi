@@ -18,7 +18,7 @@ namespace Infrastructure.Tests.Services
         private readonly Mock<IUnitOfWork> _unitOfWork;
         private readonly IMapper _mapper;
         private readonly Mock<ICacheService> _cacheService;
-        private readonly Mock<IS3Service> _s3Service;
+        private readonly Mock<IImageService> _s3Service;
         private readonly ProductService _productService;
 
         public ProductServiceTests()

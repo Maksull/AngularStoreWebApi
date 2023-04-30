@@ -11,14 +11,14 @@ namespace Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IS3Service _s3Service;
+        private readonly IImageService _imageService;
         private readonly ICacheService _cacheService;
 
-        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IS3Service s3Service, ICacheService cacheService)
+        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _s3Service = s3Service;
+            _imageService = imageService;
             _cacheService = cacheService;
         }
 
@@ -68,7 +68,7 @@ namespace Infrastructure.Services
         {
             Product product = _mapper.Map<Product>(createProduct);
 
-            await _s3Service.AddImageToBucket(createProduct.Img!, product.Images);
+            await _imageService.UploadFile(createProduct.Img!);
 
             await _unitOfWork.Product.CreateProductAsync(product);
 
@@ -85,8 +85,8 @@ namespace Infrastructure.Services
             {
                 if (updateProduct.Img != null)
                 {
-                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(product.ProductId));
-                    await _s3Service.AddImageToBucket(updateProduct.Img!, product.Images);
+                    await _imageService.DeleteFile(await GetProductImagePath(product.ProductId));
+                    await _imageService.UploadFile(updateProduct.Img!);
                 }
                 else
                 {
@@ -110,7 +110,7 @@ namespace Infrastructure.Services
             {
                 string key = $"ProductId={id}";
 
-                await _s3Service.DeleteImageFromBucket(await GetProductImagePath(id));
+                await _imageService.DeleteFile(await GetProductImagePath(id));
                 await _unitOfWork.Product.DeleteProductAsync(product);
 
                 await _cacheService.RemoveAsync(key);

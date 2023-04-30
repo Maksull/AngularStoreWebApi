@@ -122,7 +122,6 @@ namespace Dependencies
             services.AddScoped<ICacheService, CacheService>();
 
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IS3Service, S3Service>();
         }
 
         private static void ConfigureFluentValidation(this IServiceCollection services)
