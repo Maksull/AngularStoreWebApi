@@ -54,7 +54,7 @@ namespace WebApi.Controllers
 
                 if (file != null)
                 {
-                    return File(file.ResponseStream, file.Headers.ContentType ?? "image/png");
+                    return File(file.ResponseStream, file.Headers.ContentType);
                 }
 
                 return NotFound();

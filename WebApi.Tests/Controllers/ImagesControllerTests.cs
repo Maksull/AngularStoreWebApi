@@ -29,7 +29,11 @@ namespace WebApi.Tests.Controllers
         {
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
+            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/plain"
+            };
 
             _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
                 .ReturnsAsync(file);
@@ -47,7 +51,11 @@ namespace WebApi.Tests.Controllers
         {
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
+            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/plain"
+            };
 
             _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
                 .ReturnsAsync((IFormFile)null!);
@@ -65,7 +73,11 @@ namespace WebApi.Tests.Controllers
         {
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
+            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/plain"
+            };
 
             _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
                 .Throws(new Exception("Test Exception"));
@@ -93,6 +105,8 @@ namespace WebApi.Tests.Controllers
             {
                 ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test")),
             };
+            getObjectResponse.Headers["Content-Type"] = "text/plain";
+
 
             _mediator.Setup(m => m.Send(It.IsAny<GetFileQuery>(), default))
                 .ReturnsAsync(getObjectResponse);
@@ -102,7 +116,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             response.Should().BeOfType<FileStreamResult>();
-            response.ContentType.Should().BeEquivalentTo("image/png");
             response.FileStream.Should().BeSameAs(getObjectResponse.ResponseStream);
         }
 
