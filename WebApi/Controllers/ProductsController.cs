@@ -1,11 +1,10 @@
-﻿using AutoMapper;
+using Core.Contracts.Controllers.Products;
+using Core.Entities;
+using Core.Mediator.Commands.Products;
+using Core.Mediator.Queries.Products;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApi.Models;
-using WebApi.Models.Dto;
-using WebApi.Models.Repository;
-using WebApi.Services.S3Service;
 
 namespace WebApi.Controllers
 {
@@ -14,131 +13,122 @@ namespace WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public sealed class ProductsController : ControllerBase
     {
-        private readonly IProductRepository _repository;
-        private readonly IS3Service _s3Service;
-        private readonly IMapper _mapper;
+        private readonly IMediator _mediator;
 
-        public ProductsController(IProductRepository repository, IS3Service s3Service, IMapper mapper)
+        public ProductsController(IMediator mediator)
         {
-            _repository = repository;
-            _s3Service = s3Service;
-            _mapper = mapper;
+            _mediator = mediator;
         }
 
         [HttpGet]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetProducts()
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Product>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> GetProducts()
         {
-            if (_repository.Products != null)
+            try
             {
-                IEnumerable<Product> products = _repository.Products.Include(p => p.Category).Include(p => p.Supplier);
+                var products = await _mediator.Send(new GetProductsQuery());
 
-                foreach (var p in products)
+                if (products.Any())
                 {
-                    p.Category!.Products = null;
-                    p.Supplier!.Products = null;
+                    return Ok(products);
                 }
 
-                return Ok(products);
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetProduct(long id)
         {
-            if (_repository.Products != null)
+            try
             {
-                Product? p = await _repository.Products.Include(p => p.Category).Include(p => p.Supplier).FirstOrDefaultAsync(p => p.ProductId == id);
+                var product = await _mediator.Send(new GetProductByIdQuery(id));
 
-                if (p != null)
+                if (product != null)
                 {
-                    p.Category!.Products = null;
-                    p.Supplier!.Products = null;
-                    return Ok(p);
+                    return Ok(product);
                 }
+
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateProduct([FromForm] ProductDto productDto)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProduct)
         {
-            Product product = _mapper.Map<Product>(productDto);
+            try
+            {
+                var product = await _mediator.Send(new CreateProductCommand(createProduct));
 
-            await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
-
-            await _repository.CreateProductAsync(product);
-            return Ok(product);
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpPut]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateProduct([FromForm] ProductDto productDto)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductRequest updateProduct)
         {
-            Product product = _mapper.Map<Product>(productDto);
-
-            if (await _repository.Products.ContainsAsync(product))
+            try
             {
-                if (productDto.Img != null)
+                var product = await _mediator.Send(new UpdateProductCommand(updateProduct));
+
+                if (product != null)
                 {
-                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(product.ProductId));
-                    await _s3Service.AddImageToBucket(productDto.Img!, product.Images);
-                }
-                else
-                {
-                    product.Images = await GetProductImagePath(product.ProductId);
+                    return Ok(product);
                 }
 
-
-                await _repository.UpdateProductAsync(product);
-                return Ok(product);
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Product))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteProduct(long id)
         {
-            if (_repository.Products != null)
+            try
             {
-                Product? p = await _repository.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+                var product = await _mediator.Send(new DeleteProductCommand(id));
 
-                if (p != null)
+                if (product != null)
                 {
-                    await _s3Service.DeleteImageFromBucket(await GetProductImagePath(id));
-                    await _repository.DeleteProductAsync(p);
-                    return Ok(p);
+                    return Ok(product);
                 }
+
+                return NotFound();
             }
-            return NotFound();
-        }
-
-
-
-
-        private async Task<string> GetProductImagePath(long id)
-        {
-            if (_repository.Products != null)
+            catch (Exception ex)
             {
-                Product? p = await _repository.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
-
-                if (p != null)
-                {
-                    return p.Images;
-                }
+                return Problem(ex.Message);
             }
-            return string.Empty;
         }
     }
 }

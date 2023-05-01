@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Core.Contracts.Controllers.Auth;
+using Core.Mediator.Commands.Auth;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
-using WebApi.Models.Dto;
 
 namespace WebApi.Controllers
 {
@@ -13,89 +10,89 @@ namespace WebApi.Controllers
     [ApiController]
     public sealed class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IMediator _mediator;
 
-        public AuthController(IConfiguration configuration, UserManager<IdentityUser> userManager)
+        public AuthController(IMediator mediator)
         {
-            _configuration = configuration;
-            _userManager = userManager;
+            _mediator = mediator;
         }
 
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Login(UserDto request)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.Username!);
-            if (user == null)
-            {
-                return NotFound($"No user with username {request.Username}");
-            }
-            if (!await _userManager.CheckPasswordAsync(user, request.Password!))
-            {
-                return BadRequest($"Invalid password");
-            }
-            string token = CreateToken(user);
-
-            return Ok(new JwtDto { Jwt = token });
-        }
-
-        [HttpPost("validate")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult Validate(JwtDto token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var validationParameters = GetValidationParameters();
-
-            SecurityToken validatedToken;
-
             try
             {
-                IPrincipal principal = tokenHandler.ValidateToken(token.Jwt, validationParameters, out validatedToken);
+                var result = await _mediator.Send(new LoginCommand(request));
+
+                if (result != null)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest("Invalid credentials");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> Register(RegisterRequest request)
+        {
+            try
+            {
+                var result = await _mediator.Send(new RegisterCommand(request));
+
+                if (result)
+                {
+                    return Ok();
+                }
+
                 return BadRequest();
             }
-            return Ok(new JwtDto { Jwt = token.Jwt });
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+
         }
 
-        private TokenValidationParameters GetValidationParameters()
+        [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(UnauthorizedResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> RefreshJwt(RefreshTokenRequest refreshToken)
         {
-            return new TokenValidationParameters()
+            try
             {
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecurityKey").Value!))
-            };
+                var result = await _mediator.Send(new RefreshCommand(refreshToken));
+
+                if (result != null)
+                {
+                    return Ok(result);
+                }
+
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
-        private string CreateToken(IdentityUser user)
+        [Authorize]
+        [HttpGet("protected")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        public IActionResult Protected()
         {
-            List<Claim> claims = new()
-            {
-                new(ClaimTypes.Name, user.UserName!),
-                new(ClaimTypes.Role, "Admin")
-            };
-
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecurityKey").Value!));
-
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(double.Parse(_configuration.GetSection("JwtSettings:ExpiresInMinutes").Value!)),
-                signingCredentials: credentials
-                );
-
-            string jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
+            return Ok();
         }
     }
 }
