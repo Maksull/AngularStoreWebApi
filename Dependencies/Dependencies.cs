@@ -51,9 +51,9 @@ namespace Dependencies
                     {
                         appContext.Database.Migrate();
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        throw new Exception("Api Migration failed");
+                        throw new Exception(ex.Message);
                     }
                 }
                 using (var appContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>())
