@@ -55,6 +55,72 @@ builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
 
 #endregion
 
+builder.Services.AddCors(opts => opts.AddPolicy("StoreOrigins", policy =>
+{
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+}));
+
+builder.Services.AddDbContext<ApiDataContext>(opts =>
+{
+    opts.UseSqlServer(builder.Configuration["ConnectionStrings:Store"]!);
+});
+builder.Services.AddDbContext<IdentityDataContext>(opts =>
+{
+    opts.UseSqlServer(builder.Configuration["ConnectionStrings:Identity"]!);
+});
+builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<IdentityDataContext>();
+
+
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IS3Service, S3Service>();
+
+
+builder.Services.AddAuthentication(opts =>
+{
+    opts.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opts.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(opts =>
+{
+    opts.TokenValidationParameters = new()
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecurityKey"]!)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+
+builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
+{
+    opts.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+    opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddAWSService<IAmazonS3>(new AWSOptions
+    {
+        Credentials = new BasicAWSCredentials(builder.Configuration["AWS:AccessKeyId"], builder.Configuration["AWS:SecretAccessKey"])
+    });
+}
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+    builder.Services.AddAWSService<IAmazonS3>();
+}
+
+
+#endregion
+
 var app = builder.Build();
 
 #region App

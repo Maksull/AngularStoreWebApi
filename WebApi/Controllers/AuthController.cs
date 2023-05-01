@@ -1,4 +1,4 @@
-﻿using Core.Contracts.Controllers.Auth;
+using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -94,6 +94,5 @@ namespace WebApi.Controllers
         {
             return Ok();
         }
-
     }
 }

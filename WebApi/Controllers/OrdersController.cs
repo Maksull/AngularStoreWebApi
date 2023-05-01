@@ -1,4 +1,4 @@
-﻿using Core.Contracts.Controllers.Orders;
+using Core.Contracts.Controllers.Orders;
 using Core.Entities;
 using Core.Mediator.Commands.Orders;
 using Core.Mediator.Queries.Orders;
