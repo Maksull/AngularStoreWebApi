@@ -1,4 +1,4 @@
-﻿using Core.Contracts.Controllers.Products;
+using Core.Contracts.Controllers.Products;
 using Core.Entities;
 using Core.Mediator.Commands.Products;
 using Core.Mediator.Queries.Products;
