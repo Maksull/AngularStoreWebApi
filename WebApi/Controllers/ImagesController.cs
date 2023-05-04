@@ -1,4 +1,4 @@
-using Core.Mediator.Commands.Images;
+﻿using Core.Mediator.Commands.Images;
 using Core.Mediator.Queries.Images;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -64,5 +64,6 @@ namespace WebApi.Controllers
                 return Problem(ex.Message);
             }
         }
+
     }
 }

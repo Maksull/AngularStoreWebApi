@@ -1,4 +1,4 @@
-using Core.Contracts.Controllers.Categories;
+﻿using Core.Contracts.Controllers.Categories;
 using Core.Entities;
 using Core.Mediator.Commands.Categories;
 using Core.Mediator.Queries.Categories;
