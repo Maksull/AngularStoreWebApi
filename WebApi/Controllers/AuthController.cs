@@ -1,4 +1,4 @@
-﻿using Core.Contracts.Controllers.Auth;
+using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
 using Core.Mediator.Queries.Auth;
 using MediatR;
