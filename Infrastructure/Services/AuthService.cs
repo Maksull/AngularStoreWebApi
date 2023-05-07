@@ -67,14 +67,31 @@ namespace Infrastructure.Services
         {
             RefreshToken refreshToken = _mapper.Map<RefreshToken>(request);
 
-            var user = await _userManager.Users
+            if (refreshToken.Expired > DateTime.UtcNow)
+            {
+                var user = await _userManager.Users
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken.Token && u.RefreshTokenExpired == refreshToken.Expired);
 
-            if (user != null)
-            {
-                string token = await CreateToken(user);
+                if (user != null)
+                {
+                    string token = await CreateToken(user);
 
-                return new(token, refreshToken);
+                    return new(token, refreshToken);
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<UserResponse?> GetUserData(string username)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == username);
+
+            if(user != null)
+            {
+                var result = _mapper.Map<UserResponse>(user);
+
+                return result;
             }
 
             return null;

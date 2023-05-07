@@ -39,6 +39,9 @@ namespace Infrastructure.Mapster
 
             config.ForType<RefreshTokenRequest, RefreshToken>();
 
+            config.ForType<User, UserResponse>()
+                .Map(d => d.Username, s => s.UserName);
+
         }
     }
 }

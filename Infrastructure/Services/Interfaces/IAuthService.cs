@@ -7,5 +7,6 @@ namespace Infrastructure.Services.Interfaces
         Task<JwtResponse?> Login(LoginRequest login);
         Task<bool> Register(RegisterRequest register);
         Task<JwtResponse?> Refresh(RefreshTokenRequest request);
+        Task<UserResponse?> GetUserData(string username);
     }
 }

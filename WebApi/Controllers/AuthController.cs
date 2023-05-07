@@ -1,8 +1,10 @@
 ﻿using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
+using Core.Mediator.Queries.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace WebApi.Controllers
 {
@@ -88,6 +90,35 @@ namespace WebApi.Controllers
         }
 
         [Authorize]
+        [HttpGet("userData")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> GetUserData()
+        {
+            try
+            {
+                var username = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value.ToString();
+
+                if (username != null)
+                {
+                    var result = await _mediator.Send(new GetUserDataQuery(username));
+
+                    if (result != null)
+                    {
+                        return Ok(result);
+                    }
+                }
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [Authorize]
         [HttpGet("protected")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
         public IActionResult Protected()
@@ -95,5 +126,12 @@ namespace WebApi.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("adminProtected")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        public IActionResult AdminProtected()
+        {
+            return Ok();
+        }
     }
 }
