@@ -50,17 +50,6 @@ namespace Dependencies
                     try
                     {
                         appContext.Database.Migrate();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception(ex.Message);
-                    }
-                }
-                using (var appContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>())
-                {
-                    try
-                    {
-                        appContext.Database.Migrate();
 
                         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
@@ -69,9 +58,9 @@ namespace Dependencies
                         var result = userManager.AddToRoleAsync(user, "Admin").Result;
 
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        throw new Exception("Identity Migration failed");
+                        throw new Exception(ex.Message);
                     }
                 }
             }
@@ -86,12 +75,8 @@ namespace Dependencies
             {
                 opts.UseSqlServer(configuration["ConnectionStrings:Store"]!);
             });
-            services.AddDbContext<IdentityDataContext>(opts =>
-            {
-                opts.UseSqlServer(configuration["ConnectionStrings:Identity"]!);
-            });
 
-            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<IdentityDataContext>();
+            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApiDataContext>();
 
         }
 
@@ -107,6 +92,8 @@ namespace Dependencies
                 .AddScoped(provider => new Lazy<ISupplierRepository>(() => provider.GetRequiredService<ISupplierRepository>()));
             services.AddScoped<IOrderRepository, OrderRepository>()
                 .AddScoped(provider => new Lazy<IOrderRepository>(() => provider.GetRequiredService<IOrderRepository>()));
+            services.AddScoped<IRatingRepository, RatingRepository>()
+                .AddScoped(provider => new Lazy<IRatingRepository>(() => provider.GetRequiredService<IRatingRepository>()));
 
         }
 
@@ -118,6 +105,7 @@ namespace Dependencies
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IImageService, ImageService>();
+            services.AddScoped<IRatingService, RatingService>();
 
             services.AddScoped<ICacheService, CacheService>();
 
