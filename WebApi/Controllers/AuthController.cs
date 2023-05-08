@@ -98,16 +98,13 @@ namespace WebApi.Controllers
         {
             try
             {
-                var username = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value.ToString();
+                var id = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
 
-                if (username != null)
+                var result = await _mediator.Send(new GetUserDataQuery(User));
+
+                if (result != null)
                 {
-                    var result = await _mediator.Send(new GetUserDataQuery(username));
-
-                    if (result != null)
-                    {
-                        return Ok(result);
-                    }
+                    return Ok(result);
                 }
 
                 return NotFound();

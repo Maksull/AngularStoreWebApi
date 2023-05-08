@@ -16,7 +16,7 @@ namespace Infrastructure.Mediator.Handlers.Auth
 
         public async Task<UserResponse?> Handle(GetUserDataQuery request, CancellationToken cancellationToken)
         {
-            return await _authService.GetUserData(request.Username);
+            return await _authService.GetUserData(request.User);
         }
     }
 }

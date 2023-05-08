@@ -1,4 +1,5 @@
 ﻿using Core.Contracts.Controllers.Auth;
+using System.Security.Claims;
 
 namespace Infrastructure.Services.Interfaces
 {
@@ -7,6 +8,6 @@ namespace Infrastructure.Services.Interfaces
         Task<JwtResponse?> Login(LoginRequest login);
         Task<bool> Register(RegisterRequest register);
         Task<JwtResponse?> Refresh(RefreshTokenRequest request);
-        Task<UserResponse?> GetUserData(string username);
+        Task<UserResponse?> GetUserData(ClaimsPrincipal user);
     }
 }

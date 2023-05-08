@@ -83,13 +83,14 @@ namespace Infrastructure.Services
             return null;
         }
 
-        public async Task<UserResponse?> GetUserData(string username)
+        public async Task<UserResponse?> GetUserData(ClaimsPrincipal user)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == username);
+            var id = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
+            var u = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
-            if(user != null)
+            if (u != null)
             {
-                var result = _mapper.Map<UserResponse>(user);
+                var result = _mapper.Map<UserResponse>(u);
 
                 return result;
             }
