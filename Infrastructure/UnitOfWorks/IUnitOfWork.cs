@@ -8,5 +8,6 @@ namespace Infrastructure.UnitOfWorks
         ICategoryRepository Category { get; }
         ISupplierRepository Supplier { get; }
         IOrderRepository Order { get; }
+        IRatingRepository Rating { get; }
     }
 }

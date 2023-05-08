@@ -104,6 +104,7 @@ namespace Infrastructure.Services
             List<Claim> claims = new()
             {
                 new(ClaimTypes.Name, user.UserName!),
+                new(ClaimTypes.NameIdentifier, user.Id),
                 new(ClaimTypes.Expiration, DateTime.Now.ToString()),
 
             };

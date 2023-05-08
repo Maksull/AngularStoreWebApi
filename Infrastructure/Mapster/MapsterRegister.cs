@@ -2,6 +2,7 @@
 using Core.Contracts.Controllers.Categories;
 using Core.Contracts.Controllers.Orders;
 using Core.Contracts.Controllers.Products;
+using Core.Contracts.Controllers.Ratings;
 using Core.Contracts.Controllers.Suppliers;
 using Core.Entities;
 using Mapster;
@@ -33,6 +34,8 @@ namespace Infrastructure.Mapster
             config.ForType<CreateCartLineRequest, CartLine>();
             config.ForType<UpdateCartLineRequest, CartLine>();
 
+            config.ForType<CreateRatingRequest, Rating>();
+            config.ForType<UpdateRatingRequest, Rating>();
 
             config.ForType<RegisterRequest, User>()
                 .Map(d => d.UserName, s => s.Username);
