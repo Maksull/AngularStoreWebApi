@@ -67,6 +67,30 @@ namespace WebApi.Controllers
             }
         }
 
+        [HttpGet("userId")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<IActionResult> GetRatingsByUserId()
+        {
+            try
+            {
+                var ratings = await _mediator.Send(new GetRatingsByUserIdQuery(User));
+
+                if (ratings.Any())
+                {
+                    return Ok(ratings);
+                }
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]

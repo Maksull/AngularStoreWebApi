@@ -35,6 +35,20 @@ namespace Infrastructure.Services
             return ratings;
         }
 
+        public IEnumerable<Rating> GetRatingsByUserId(ClaimsPrincipal user)
+        {
+            var userId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString();
+
+            if(userId == null)
+            {
+                return Enumerable.Empty<Rating>();
+            }
+
+            IEnumerable<Rating> ratings = _unitOfWork.Rating.Ratings.Where(r => r.UserId == userId);
+
+            return ratings;
+        }
+
         public async Task<Rating?> GetRating(Guid id)
         {
             string key = $"RatingId={id}";
