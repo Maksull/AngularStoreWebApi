@@ -16,7 +16,7 @@ namespace Infrastructure.Mediator.Handlers.Orders
 
         public async Task<Order> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
-            return await _orderService.CreateOrder(request.Order);
+            return await _orderService.CreateOrder(request.Order, request.User);
         }
     }
 }

@@ -4,6 +4,7 @@ using Infrastructure.Services.Interfaces;
 using Infrastructure.UnitOfWorks;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Infrastructure.Services
 {
@@ -25,6 +26,16 @@ namespace Infrastructure.Services
         public IEnumerable<Order> GetOrders()
         {
             return _unitOfWork.Order.Orders
+                .Include(o => o.Lines)!
+                    .ThenInclude(l => l.Product);
+        }
+
+        public IEnumerable<Order> GetOrdersByUserId(ClaimsPrincipal user)
+        {
+            var userId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
+
+            return _unitOfWork.Order.Orders
+                .Where(o => o.UserId == userId)
                 .Include(o => o.Lines)!
                     .ThenInclude(l => l.Product);
         }
@@ -54,9 +65,15 @@ namespace Infrastructure.Services
             return order;
         }
 
-        public async Task<Order> CreateOrder(CreateOrderRequest createOrder)
+        public async Task<Order> CreateOrder(CreateOrderRequest createOrder, ClaimsPrincipal user)
         {
             var order = _mapper.Map<Order>(createOrder);
+            var userId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString();
+
+            if (userId != null)
+            {
+                order.UserId = userId;
+            }
 
             await _unitOfWork.Order.CreateOrderAsync(order);
 
