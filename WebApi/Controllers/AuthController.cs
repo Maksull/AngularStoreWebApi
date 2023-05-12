@@ -10,6 +10,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public sealed class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -22,97 +23,64 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            try
-            {
-                var result = await _mediator.Send(new LoginCommand(request));
+            var result = await _mediator.Send(new LoginCommand(request));
 
-                if (result != null)
-                {
-                    return Ok(result);
-                }
-
-                return BadRequest("Invalid credentials");
-            }
-            catch (Exception ex)
+            if (result != null)
             {
-                return Problem(ex.Message);
+                return Ok(result);
             }
+
+            return BadRequest("Invalid credentials");
         }
 
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            try
-            {
-                var result = await _mediator.Send(new RegisterCommand(request));
+            var result = await _mediator.Send(new RegisterCommand(request));
 
-                if (result)
-                {
-                    return Ok();
-                }
-
-                return BadRequest();
-            }
-            catch (Exception ex)
+            if (result)
             {
-                return Problem(ex.Message);
+                return Ok();
             }
 
+            return BadRequest();
         }
 
         [HttpPost("refresh")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(UnauthorizedResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> RefreshJwt(RefreshTokenRequest refreshToken)
         {
-            try
-            {
-                var result = await _mediator.Send(new RefreshCommand(refreshToken));
+            var result = await _mediator.Send(new RefreshCommand(refreshToken));
 
-                if (result != null)
-                {
-                    return Ok(result);
-                }
-
-                return Unauthorized();
-            }
-            catch (Exception ex)
+            if (result != null)
             {
-                return Problem(ex.Message);
+                return Ok(result);
             }
+
+            return Unauthorized();
         }
 
         [Authorize]
         [HttpGet("userData")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JwtResponse))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetUserData()
         {
-            try
+            var id = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
+
+            var result = await _mediator.Send(new GetUserDataQuery(User));
+
+            if (result != null)
             {
-                var id = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
-
-                var result = await _mediator.Send(new GetUserDataQuery(User));
-
-                if (result != null)
-                {
-                    return Ok(result);
-                }
-
-                return NotFound();
+                return Ok(result);
             }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+
+            return NotFound();
         }
 
         [Authorize]

@@ -10,6 +10,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public sealed class RatingsController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -23,162 +24,106 @@ namespace WebApi.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetRatings()
         {
-            try
-            {
-                var ratings = await _mediator.Send(new GetRatingsQuery());
+            var ratings = await _mediator.Send(new GetRatingsQuery());
 
-                if (ratings.Any())
-                {
-                    return Ok(ratings);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (ratings.Any())
             {
-                return Problem(ex.Message);
+                return Ok(ratings);
             }
+
+            return NotFound();
         }
 
         [HttpGet("productId/{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetRatingsByProductId(long id)
         {
-            try
-            {
-                var ratings = await _mediator.Send(new GetRatingsByProductIdQuery(id));
+            var ratings = await _mediator.Send(new GetRatingsByProductIdQuery(id));
 
-                if (ratings.Any())
-                {
-                    return Ok(ratings);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (ratings.Any())
             {
-                return Problem(ex.Message);
+                return Ok(ratings);
             }
+
+            return NotFound();
         }
 
         [HttpGet("userId")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetRatingsByUserId()
         {
-            try
-            {
-                var ratings = await _mediator.Send(new GetRatingsByUserIdQuery(User));
+            var ratings = await _mediator.Send(new GetRatingsByUserIdQuery(User));
 
-                if (ratings.Any())
-                {
-                    return Ok(ratings);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (ratings.Any())
             {
-                return Problem(ex.Message);
+                return Ok(ratings);
             }
+
+            return NotFound();
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetRating(Guid id)
         {
-            try
-            {
-                var rating = await _mediator.Send(new GetRatingByIdQuery(id));
+            var rating = await _mediator.Send(new GetRatingByIdQuery(id));
 
-                if (rating != null)
-                {
-                    return Ok(rating);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (rating != null)
             {
-                return Problem(ex.Message);
+                return Ok(rating);
             }
+
+            return NotFound();
         }
 
         [HttpPost]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateRating(CreateRatingRequest createRating)
         {
-            try
-            {
-                var r = await _mediator.Send(new CreateRatingCommand(createRating, User));
+            var r = await _mediator.Send(new CreateRatingCommand(createRating, User));
 
-                return Ok(r);
-            }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+            return Ok(r);
         }
 
         [HttpPut]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateRating(UpdateRatingRequest updateRating)
         {
-            try
-            {
-                var r = await _mediator.Send(new UpdateRatingCommand(updateRating, User));
+            var r = await _mediator.Send(new UpdateRatingCommand(updateRating, User));
 
-                if (r != null)
-                {
-                    return Ok(r);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (r != null)
             {
-                return Problem(ex.InnerException!.Message);
+                return Ok(r);
             }
+
+            return NotFound();
         }
 
         [HttpDelete("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteRating(Guid id)
         {
-            try
-            {
-                var rating = await _mediator.Send(new DeleteRatingCommand(id));
+            var rating = await _mediator.Send(new DeleteRatingCommand(id));
 
-                if (rating != null)
-                {
-                    return Ok(rating);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (rating != null)
             {
-                return Problem(ex.Message);
+                return Ok(rating);
             }
+
+            return NotFound();
         }
     }
 }

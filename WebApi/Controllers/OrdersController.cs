@@ -10,6 +10,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public sealed class OrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -23,48 +24,32 @@ namespace WebApi.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetOrders()
         {
-            try
-            {
-                var orders = await _mediator.Send(new GetOrdersQuery());
+            var orders = await _mediator.Send(new GetOrdersQuery());
 
-                if (orders.Any())
-                {
-                    return Ok(orders);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (orders.Any())
             {
-                return Problem(ex.Message);
+                return Ok(orders);
             }
+
+            return NotFound();
         }
 
         [HttpGet("userId")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetOrdersByUserId()
         {
-            try
-            {
-                var orders = await _mediator.Send(new GetOrdersByUserIdQuery(User));
+            var orders = await _mediator.Send(new GetOrdersByUserIdQuery(User));
 
-                if (orders.Any())
-                {
-                    return Ok(orders);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (orders.Any())
             {
-                return Problem(ex.Message);
+                return Ok(orders);
             }
+
+            return NotFound();
         }
 
 
@@ -72,91 +57,59 @@ namespace WebApi.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetOrder(long id)
         {
-            try
-            {
-                var order = await _mediator.Send(new GetOrderByIdQuery(id));
+            var order = await _mediator.Send(new GetOrderByIdQuery(id));
 
-                if (order != null)
-                {
-                    return Ok(order);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (order != null)
             {
-                return Problem(ex.Message);
+                return Ok(order);
             }
+
+            return NotFound();
         }
 
 
         [HttpPost]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateOrder(CreateOrderRequest order)
         {
-            try
-            {
-                var o = await _mediator.Send(new CreateOrderCommand(order, User));
+            var o = await _mediator.Send(new CreateOrderCommand(order, User));
 
-                return Ok(o);
-            }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+            return Ok(o);
         }
 
         [HttpPut]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateOrder(UpdateOrderRequest order)
         {
-            try
-            {
-                var o = await _mediator.Send(new UpdateOrderCommand(order));
+            var o = await _mediator.Send(new UpdateOrderCommand(order));
 
-                if (o != null)
-                {
-                    return Ok(o);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (o != null)
             {
-                return Problem(ex.Message);
+                return Ok(o);
             }
+
+            return NotFound();
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteOrder(long id)
         {
-            try
-            {
-                var order = await _mediator.Send(new DeleteOrderCommand(id));
+            var order = await _mediator.Send(new DeleteOrderCommand(id));
 
-                if (order != null)
-                {
-                    return Ok(order);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (order != null)
             {
-                return Problem(ex.Message);
+                return Ok(order);
             }
+
+            return NotFound();
         }
     }
 }

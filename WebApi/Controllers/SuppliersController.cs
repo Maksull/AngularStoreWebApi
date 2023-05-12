@@ -11,6 +11,7 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public sealed class SuppliersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -24,111 +25,71 @@ namespace WebApi.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Supplier>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetSuppliers()
         {
-            try
-            {
-                var suppliers = await _mediator.Send(new GetSuppliersQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
 
-                if (suppliers.Any())
-                {
-                    return Ok(suppliers);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (suppliers.Any())
             {
-                return Problem(ex.Message);
+                return Ok(suppliers);
             }
+
+            return NotFound();
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetSupplier(long id)
         {
-            try
-            {
-                var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
+            var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
 
-                if (supplier != null)
-                {
-                    return Ok(supplier);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (supplier != null)
             {
-                return Problem(ex.Message);
+                return Ok(supplier);
             }
+
+            return NotFound();
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> CreateSupplier(CreateSupplierRequest createSupplier)
         {
-            try
-            {
-                var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
+            var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
 
-                return Ok(s);
-            }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+            return Ok(s);
         }
 
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateSupplier(UpdateSupplierRequest updateSupplier)
         {
-            try
-            {
-                var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
+            var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
 
-                if (s != null)
-                {
-                    return Ok(s);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (s != null)
             {
-                return Problem(ex.Message);
+                return Ok(s);
             }
+
+            return NotFound();
         }
 
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteSupplier(long id)
         {
-            try
-            {
-                var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
+            var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
 
-                if (supplier != null)
-                {
-                    return Ok(supplier);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (supplier != null)
             {
-                return Problem(ex.Message);
+                return Ok(supplier);
             }
+
+            return NotFound();
         }
     }
 }
