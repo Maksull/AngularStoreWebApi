@@ -5,8 +5,8 @@ namespace Infrastructure.Services.Interfaces
 {
     public interface IImageService
     {
-        Task<GetObjectResponse?> GetFile(string key);
-        Task<IFormFile?> UploadFile(IFormFile file, string path);
-        Task<bool> DeleteFile(string path);
+        Task<GetObjectResponse?> GetImage(string key);
+        Task<IFormFile?> UploadImage(IFormFile file, string path);
+        Task<bool> DeleteImage(string path);
     }
 }

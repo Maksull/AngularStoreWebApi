@@ -10,10 +10,12 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<NoWarn>1591;1701;1702</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<NoWarn>1591;1701;1702</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -47,6 +49,8 @@
 
 	<PropertyGroup>
 		<IncludeOpenAPIAnalyzers>True</IncludeOpenAPIAnalyzers>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<DocumentationFile>C:\Users\Maksym\source\repos\Angular\Coursework\WebApiSolution\WebApi\bin\Debug\net7.0\WebApi.xml</DocumentationFile>
 	</PropertyGroup>
 
 </Project>

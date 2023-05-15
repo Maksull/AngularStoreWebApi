@@ -20,6 +20,18 @@ namespace WebApi.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Gets a list of orders.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/orders
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of orders</returns>
+        /// <response code="200">Returns the list of orders</response>
+        /// <response code="404">If the orders do not exist</response>
         [HttpGet]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
@@ -36,6 +48,18 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets an orders by user's id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/orders/
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of orders with same user's id</returns>
+        /// <response code="200">Returns the list of orders with same user's id</response>
+        /// <response code="404">If the orders does not exist</response>
         [HttpGet("userId")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
@@ -52,12 +76,24 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
-
+        /// <summary>
+        /// Gets an order by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/orders/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the order. This ID is used to retrieve a specific order from the database.</param>
+        /// <returns>A order</returns>
+        /// <response code="200">Returns the order</response>
+        /// <response code="404">If the order does not exist</response>
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> GetOrder(long id)
+        public async Task<IActionResult> GetOrder([FromRoute] long id)
         {
             var order = await _mediator.Send(new GetOrderByIdQuery(id));
 
@@ -69,24 +105,83 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
-
+        /// <summary>
+        /// Creates an order.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST api/orders
+        ///     {        
+        ///       "name": "Username",
+        ///       "email": "your_email@sol.com",
+        ///       "address": "Address",
+        ///       "city": "City",
+        ///       "country": "Country",
+        ///       "zip": "23327",
+        ///       "lines": [
+        ///         {
+        ///           "productId": 1,
+        ///           "quantity": 2
+        ///         },
+        ///         {
+        ///           "productId": 3,
+        ///           "quantity": 1
+        ///         },
+        ///       ]
+        ///     }
+        /// </remarks>
+        /// <param name="createOrder">The order object containing the details of the order to be created.</param>
+        /// <returns>A newly created order</returns>
+        /// <response code="200">Returns the newly created order</response>
         [HttpPost]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
-        public async Task<IActionResult> CreateOrder(CreateOrderRequest order)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrder)
         {
-            var o = await _mediator.Send(new CreateOrderCommand(order, User));
+            var o = await _mediator.Send(new CreateOrderCommand(createOrder, User));
 
             return Ok(o);
         }
 
+        /// <summary>
+        /// Updates an order.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT api/orders
+        ///     {    
+        ///       "orderId": 1,
+        ///       "name": "Username",
+        ///       "email": "your_email@sol.com",
+        ///       "address": "Address",
+        ///       "city": "City",
+        ///       "country": "Country",
+        ///       "zip": "23327",
+        ///       "lines": [
+        ///         {
+        ///           "productId": 1,
+        ///           "quantity": 2
+        ///         },
+        ///         {
+        ///           "productId": 3,
+        ///           "quantity": 1
+        ///         },
+        ///       ]
+        ///     }
+        /// </remarks>
+        /// <param name="updateOrder">The order object containing the details of the order to be updated.</param>
+        /// <returns>An updated order</returns>
+        /// <response code="200">Returns the updated order</response>
+        /// <response code="404">If the order does not exist</response>
         [HttpPut]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> UpdateOrder(UpdateOrderRequest order)
+        public async Task<IActionResult> UpdateOrder([FromBody] UpdateOrderRequest updateOrder)
         {
-            var o = await _mediator.Send(new UpdateOrderCommand(order));
+            var o = await _mediator.Send(new UpdateOrderCommand(updateOrder));
 
             if (o != null)
             {
@@ -96,6 +191,19 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Deletes an order by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     DELETE api/orders/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the order. This ID is used to delete a specific order from the database.</param>
+        /// <returns>An deleted order</returns>
+        /// <response code="200">Returns the deleted order</response>
+        /// <response code="404">If the order does not exist</response>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]

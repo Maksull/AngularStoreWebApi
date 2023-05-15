@@ -19,12 +19,24 @@ namespace WebApi.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Creates an image in s3 bucket.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST api/images/upload
+        ///     
+        /// </remarks>
+        /// <param name="file">The file object containing the details of the image to be created.</param>
+        /// <returns>An OkObjectResult with FileName</returns>
+        /// <response code="200">Returns the OkObjectResult with FileName</response>
         [HttpPost("upload")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> UploadFile(IFormFile file)
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
         {
-            var f = await _mediator.Send(new UploadFileCommand(file));
+            var f = await _mediator.Send(new UploadImageCommand(file));
 
             if (f != null)
             {
@@ -34,13 +46,26 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets an image by its key.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/images/request?key=product/product.png
+        ///     
+        /// </remarks>
+        /// <param name="key">The key of the image store in s3 bucket. This key is used to retrieve a specific image from the s3 bucket.</param>
+        /// <returns>An image</returns>
+        /// <response code="200">Returns the image</response>
+        /// <response code="404">If the image does not exist</response>
         [HttpGet("request")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileStreamResult))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         public async Task<IActionResult> GetFile(string key)
         {
-            var file = await _mediator.Send(new GetFileQuery(key));
+            var file = await _mediator.Send(new GetImageQuery(key));
 
             if (file != null)
             {

@@ -3,5 +3,5 @@ using MediatR;
 
 namespace Core.Mediator.Queries.Images
 {
-    public sealed record GetFileQuery(string Key) : IRequest<GetObjectResponse?>;
+    public sealed record GetImageQuery(string Key) : IRequest<GetObjectResponse?>;
 }

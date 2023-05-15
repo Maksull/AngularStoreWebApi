@@ -68,7 +68,7 @@ namespace Infrastructure.Services
         {
             Product product = _mapper.Map<Product>(createProduct);
 
-            await _imageService.UploadFile(createProduct.Img!, product.Images);
+            await _imageService.UploadImage(createProduct.Img!, product.Images);
 
             await _unitOfWork.Product.CreateProductAsync(product);
 
@@ -85,8 +85,8 @@ namespace Infrastructure.Services
             {
                 if (updateProduct.Img != null)
                 {
-                    await _imageService.DeleteFile(await GetProductImagePath(product.ProductId));
-                    await _imageService.UploadFile(updateProduct.Img!, product.Images);
+                    await _imageService.DeleteImage(await GetProductImagePath(product.ProductId));
+                    await _imageService.UploadImage(updateProduct.Img!, product.Images);
                 }
                 else
                 {
@@ -110,7 +110,7 @@ namespace Infrastructure.Services
             {
                 string key = $"ProductId={id}";
 
-                await _imageService.DeleteFile(await GetProductImagePath(id));
+                await _imageService.DeleteImage(await GetProductImagePath(id));
                 await _unitOfWork.Product.DeleteProductAsync(product);
 
                 await _cacheService.RemoveAsync(key);

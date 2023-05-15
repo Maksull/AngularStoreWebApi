@@ -20,6 +20,18 @@ namespace WebApi.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Gets a list of ratings.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/ratings
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of ratings</returns>
+        /// <response code="200">Returns the list of ratings</response>
+        /// <response code="404">If the ratings do not exist</response>
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
@@ -36,11 +48,24 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets a rating by product id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/ratings/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the product. This ID is used to retrieve a ratings for product from the database.</param>
+        /// <returns>Returns the list of ratings</returns>
+        /// <response code="200">Returns the list of ratings</response>
+        /// <response code="404">If the ratings does not exist</response>
         [HttpGet("productId/{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> GetRatingsByProductId(long id)
+        public async Task<IActionResult> GetRatingsByProductId([FromRoute] long id)
         {
             var ratings = await _mediator.Send(new GetRatingsByProductIdQuery(id));
 
@@ -52,8 +77,20 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets a ratings by user's id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/ratings/userId
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of ratings with same user's id</returns>
+        /// <response code="200">Returns the list of ratings with same user's id</response>
+        /// <response code="404">If the ratings does not exist</response>
         [HttpGet("userId")]
-        [AllowAnonymous]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Rating>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         public async Task<IActionResult> GetRatingsByUserId()
@@ -68,11 +105,24 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets a rating by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/ratings/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the rating. This ID is used to retrieve a specific rating from the database.</param>
+        /// <returns>A rating</returns>
+        /// <response code="200">Returns the rating</response>
+        /// <response code="404">If the rating does not exist</response>
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> GetRating(Guid id)
+        public async Task<IActionResult> GetRating([FromRoute] Guid id)
         {
             var rating = await _mediator.Send(new GetRatingByIdQuery(id));
 
@@ -84,21 +134,55 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Creates a rating.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST api/ratings
+        ///     {        
+        ///       "productId": 1,
+        ///       "value": 5,
+        ///       "comment": "BEST!"
+        ///     }
+        /// </remarks>
+        /// <param name="createRating">The rating object containing the details of the rating to be created.</param>
+        /// <returns>A newly created rating</returns>
+        /// <response code="200">Returns the newly created rating</response>
         [HttpPost]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
-        public async Task<IActionResult> CreateRating(CreateRatingRequest createRating)
+        public async Task<IActionResult> CreateRating([FromBody] CreateRatingRequest createRating)
         {
             var r = await _mediator.Send(new CreateRatingCommand(createRating, User));
 
             return Ok(r);
         }
 
+        /// <summary>
+        /// Updates a rating.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT api/ratings
+        ///     {        
+        ///       "ratingId" = "guid",
+        ///       "productId": 1,
+        ///       "value": 1,
+        ///       "comment": "WORST!"
+        ///     }
+        /// </remarks>
+        /// <param name="updateRating">The rating object containing the details of the rating to be updated.</param>
+        /// <returns>An updated rating</returns>
+        /// <response code="200">Returns the updated rating</response>
+        /// <response code="404">If the rating does not exist</response>
         [HttpPut]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> UpdateRating(UpdateRatingRequest updateRating)
+        public async Task<IActionResult> UpdateRating([FromBody] UpdateRatingRequest updateRating)
         {
             var r = await _mediator.Send(new UpdateRatingCommand(updateRating, User));
 
@@ -110,11 +194,24 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Deletes a rating by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     DELETE api/ratings/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the rating. This ID is used to delete a specific rating from the database.</param>
+        /// <returns>An deleted rating</returns>
+        /// <response code="200">Returns the deleted rating</response>
+        /// <response code="404">If the rating does not exist</response>
         [HttpDelete("{id}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Rating))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> DeleteRating(Guid id)
+        public async Task<IActionResult> DeleteRating([FromRoute] Guid id)
         {
             var rating = await _mediator.Send(new DeleteRatingCommand(id));
 

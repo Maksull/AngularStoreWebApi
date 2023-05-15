@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Mediator.Handlers.Images
 {
-    public sealed class UploadFileHandler : IRequestHandler<UploadFileCommand, IFormFile?>
+    public sealed class UploadFileHandler : IRequestHandler<UploadImageCommand, IFormFile?>
     {
         private readonly IImageService _imageService;
 
@@ -14,9 +14,9 @@ namespace Infrastructure.Mediator.Handlers.Images
             _imageService = imageService;
         }
 
-        public async Task<IFormFile?> Handle(UploadFileCommand request, CancellationToken cancellationToken)
+        public async Task<IFormFile?> Handle(UploadImageCommand request, CancellationToken cancellationToken)
         {
-            return await _imageService.UploadFile(request.File, request.File.FileName);
+            return await _imageService.UploadImage(request.File, request.File.FileName);
         }
     }
 }

@@ -21,6 +21,18 @@ namespace WebApi.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Gets a list of suppliers.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/suppliers
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of suppliers</returns>
+        /// <response code="200">Returns the list of suppliers</response>
+        /// <response code="404">If the suppliers do not exist</response>
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Supplier>))]
@@ -37,11 +49,24 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Gets a supplier by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/suppliers/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the supplier. This ID is used to retrieve a specific supplier from the database.</param>
+        /// <returns>A supplier</returns>
+        /// <response code="200">Returns the supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> GetSupplier(long id)
+        public async Task<IActionResult> GetSupplier([FromRoute] long id)
         {
             var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
 
@@ -53,19 +78,51 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Creates a supplier.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST api/suppliers
+        ///     {        
+        ///       "name": "GoBikes",
+        ///       "city": "Ohio",
+        ///     }
+        /// </remarks>
+        /// <param name="createSupplier">The supplier object containing the details of the supplier to be created.</param>
+        /// <returns>A newly created supplier</returns>
+        /// <response code="200">Returns the newly created supplier</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
-        public async Task<IActionResult> CreateSupplier(CreateSupplierRequest createSupplier)
+        public async Task<IActionResult> CreateSupplier([FromBody] CreateSupplierRequest createSupplier)
         {
             var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
 
             return Ok(s);
         }
 
+        /// <summary>
+        /// Updates a supplier.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT api/suppliers
+        ///     {        
+        ///       "categoryId": 1,
+        ///       "name": "GoBikes",
+        ///       "city": "Ohio"
+        ///     }
+        /// </remarks>
+        /// <param name="updateSupplier">The supplier object containing the details of the supplier to be updated.</param>
+        /// <returns>An updated supplier</returns>
+        /// <response code="200">Returns the updated supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> UpdateSupplier(UpdateSupplierRequest updateSupplier)
+        public async Task<IActionResult> UpdateSupplier([FromBody] UpdateSupplierRequest updateSupplier)
         {
             var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
 
@@ -77,10 +134,23 @@ namespace WebApi.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Deletes a supplier by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     DELETE api/suppliers/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the supplier. This ID is used to delete a specific supplier from the database.</param>
+        /// <returns>An deleted supplier</returns>
+        /// <response code="200">Returns the deleted supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        public async Task<IActionResult> DeleteSupplier(long id)
+        public async Task<IActionResult> DeleteSupplier([FromRoute] long id)
         {
             var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
 

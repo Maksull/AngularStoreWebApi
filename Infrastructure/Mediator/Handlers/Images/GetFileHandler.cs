@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Infrastructure.Mediator.Handlers.Images
 {
-    public sealed class GetFileHandler : IRequestHandler<GetFileQuery, GetObjectResponse?>
+    public sealed class GetFileHandler : IRequestHandler<GetImageQuery, GetObjectResponse?>
     {
         private readonly IImageService _imageService;
 
@@ -14,9 +14,9 @@ namespace Infrastructure.Mediator.Handlers.Images
             _imageService = imageService;
         }
 
-        public Task<GetObjectResponse?> Handle(GetFileQuery request, CancellationToken cancellationToken)
+        public Task<GetObjectResponse?> Handle(GetImageQuery request, CancellationToken cancellationToken)
         {
-            return _imageService.GetFile(request.Key);
+            return _imageService.GetImage(request.Key);
         }
     }
 }
