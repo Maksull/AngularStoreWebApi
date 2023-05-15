@@ -135,8 +135,6 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
         public async Task<IActionResult> GetUserData()
         {
-            var id = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value.ToString()!;
-
             var result = await _mediator.Send(new GetUserDataQuery(User));
 
             if (result != null)

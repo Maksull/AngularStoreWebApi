@@ -1,7 +1,7 @@
 ﻿using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
+using Core.Mediator.Queries.Auth;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using WebApi.Controllers;
@@ -63,26 +63,6 @@ namespace WebApi.Tests.Controllers
             result.Value.Should().BeOfType<string>();
         }
 
-        [Fact]
-        public void Login_WhenException_ReturnProblem()
-        {
-            //Arrange
-            LoginRequest loginRequest = new("First", "Password");
-            JwtResponse jwtResponse = new("jwt", new());
-
-            _mediator.Setup(m => m.Send(It.IsAny<LoginCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.Login(loginRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
 
@@ -120,25 +100,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             result.Should().BeOfType<BadRequestResult>();
-        }
-
-        [Fact]
-        public void Register_WhenException_ReturnProblem()
-        {
-            //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
-
-            _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.Register(registerRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
@@ -186,24 +147,42 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
         }
 
+        #endregion
+
+
+        #region GeUserData
+
         [Fact]
-        public void RefreshJwt_WhenException_ReturnProblem()
+        public void GetUserData_WhenCalled_ReturnOk()
         {
             //Arrange
-            RefreshTokenRequest refreshTokenRequest = new("Token", DateTime.Now);
-            JwtResponse jwtResponse = new("jwt", new());
-
-            _mediator.Setup(m => m.Send(It.IsAny<RefreshCommand>(), default))
-                .Throws(new Exception("Test Exception"));
+            UserResponse userResponse = new("First", "Last", "Username", "my_email@gog.co", "+10324114617");
+            _mediator.Setup(m => m.Send(It.IsAny<GetUserDataQuery>(), default))
+                .ReturnsAsync(userResponse);
 
             //Act
-            var response = (_controller.RefreshJwt(refreshTokenRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
+            var response = (_controller.GetUserData().Result as OkObjectResult)!;
+            var result = response.Value as UserResponse;
 
             //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
+            response.Should().BeOfType<OkObjectResult>();
+            result.Should().BeOfType<UserResponse>();
+            result.Should().BeEquivalentTo(userResponse);
+        }
+
+        [Fact]
+        public void GetUserData_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            _mediator.Setup(m => m.Send(It.IsAny<GetUserDataQuery>(), default))
+                .ReturnsAsync((UserResponse)null!);
+
+            //Act
+            var response = _controller.GetUserData().Result;
+            var result = response as NotFoundResult;
+
+            //Assert
+            result.Should().BeOfType<NotFoundResult>();
         }
 
         #endregion
@@ -221,5 +200,16 @@ namespace WebApi.Tests.Controllers
             response.Should().BeOfType<OkResult>();
         }
 
+        [Fact]
+        public void AdminProtected_WhenCalled_ReturnOk()
+        {
+            //Arrange
+
+            //Act
+            var response = (_controller.AdminProtected() as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
     }
 }

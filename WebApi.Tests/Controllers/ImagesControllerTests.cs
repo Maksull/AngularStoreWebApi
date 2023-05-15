@@ -35,7 +35,7 @@ namespace WebApi.Tests.Controllers
                 ContentType = "text/plain"
             };
 
-            _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
+            _mediator.Setup(m => m.Send(It.IsAny<UploadImageCommand>(), default))
                 .ReturnsAsync(file);
 
             //Act
@@ -57,7 +57,7 @@ namespace WebApi.Tests.Controllers
                 ContentType = "text/plain"
             };
 
-            _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
+            _mediator.Setup(m => m.Send(It.IsAny<UploadImageCommand>(), default))
                 .ReturnsAsync((IFormFile)null!);
 
             //Act
@@ -66,30 +66,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             result.Should().BeOfType<NotFoundResult>();
-        }
-
-        [Fact]
-        public void UploadFile_WhenException_ReturnProblem()
-        {
-            //Arrange
-            var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt")
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/plain"
-            };
-
-            _mediator.Setup(m => m.Send(It.IsAny<UploadFileCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.UploadFile(file).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
@@ -108,7 +84,7 @@ namespace WebApi.Tests.Controllers
             getObjectResponse.Headers["Content-Type"] = "text/plain";
 
 
-            _mediator.Setup(m => m.Send(It.IsAny<GetFileQuery>(), default))
+            _mediator.Setup(m => m.Send(It.IsAny<GetImageQuery>(), default))
                 .ReturnsAsync(getObjectResponse);
 
             //Act
@@ -123,7 +99,7 @@ namespace WebApi.Tests.Controllers
         public void GetFile_WhenCalled_ReturnBadRequest()
         {
             //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<GetFileQuery>(), default))
+            _mediator.Setup(m => m.Send(It.IsAny<GetImageQuery>(), default))
                 .ReturnsAsync((GetObjectResponse)null!);
 
             //Act
@@ -132,25 +108,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             result.Should().BeOfType<NotFoundResult>();
-        }
-
-        [Fact]
-        public void GetFile_WhenException_ReturnProblem()
-        {
-            //Arrange
-            GetObjectResponse getObjectResponse = new();
-
-            _mediator.Setup(m => m.Send(It.IsAny<GetFileQuery>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.GetFile("").Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion

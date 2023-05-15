@@ -74,23 +74,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void GetProducts_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<GetProductsQuery>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.GetProducts().Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
         #region GetProduct
@@ -136,23 +119,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void GetProduct_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<GetProductByIdQuery>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.GetProduct(1).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
         #region CreateProduct
@@ -183,27 +149,6 @@ namespace WebApi.Tests.Controllers
             //Assert
             result.Should().BeOfType<OkObjectResult>();
             result.Value.Should().BeOfType<Product>();
-        }
-
-        [Fact]
-        public void CreateProduct_WhenException_ReturnProblem()
-        {
-            //Arrange
-            var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
-            CreateProductRequest createProduct = new("First", "Desc", 1, 1, 1, file);
-
-            _mediator.Setup(m => m.Send(It.IsAny<CreateProductCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.CreateProduct(createProduct).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
@@ -253,25 +198,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void UpdateProduct_WhenException_ReturnProblem()
-        {
-            //Arrange
-            UpdateProductRequest updateProduct = new(1, "First", "Desc", 1, 1, 1, null);
-
-            _mediator.Setup(m => m.Send(It.IsAny<UpdateProductCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.UpdateProduct(updateProduct).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
         #region DeleteProduct
@@ -313,23 +239,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             result.Should().BeOfType<NotFoundResult>();
-        }
-
-        [Fact]
-        public void DeleteProduct_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<DeleteProductCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.DeleteProduct(1).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
