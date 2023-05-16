@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Mediator.Handlers.Images
 {
-    public sealed class UploadFileHandler : IRequestHandler<UploadImageCommand, IFormFile?>
+    public sealed class UploadImageHandler : IRequestHandler<UploadImageCommand, IFormFile?>
     {
         private readonly IImageService _imageService;
 
-        public UploadFileHandler(IImageService imageService)
+        public UploadImageHandler(IImageService imageService)
         {
             _imageService = imageService;
         }

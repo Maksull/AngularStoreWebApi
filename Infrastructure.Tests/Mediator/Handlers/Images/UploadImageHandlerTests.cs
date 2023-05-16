@@ -1,6 +1,4 @@
-﻿using Amazon.S3.Model;
-using Core.Mediator.Commands.Images;
-using Core.Mediator.Queries.Images;
+﻿using Core.Mediator.Commands.Images;
 using Infrastructure.Mediator.Handlers.Images;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -9,12 +7,12 @@ using System.Text;
 
 namespace Infrastructure.Tests.Mediator.Handlers.Images
 {
-    public sealed class UploadFileHandlerTests
+    public sealed class UploadImageHandlerTests
     {
         private readonly Mock<IImageService> _service;
-        private readonly UploadFileHandler _handler;
+        private readonly UploadImageHandler _handler;
 
-        public UploadFileHandlerTests()
+        public UploadImageHandlerTests()
         {
             _service = new();
             _handler = new(_service.Object);
@@ -26,11 +24,11 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
             IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
-            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>(), It.IsAny<string>()))
+            _service.Setup(s => s.UploadImage(It.IsAny<IFormFile>(), It.IsAny<string>()))
                 .ReturnsAsync(file);
 
             //Act
-            var result = _handler.Handle(new UploadFileCommand(file), CancellationToken.None).Result;
+            var result = _handler.Handle(new UploadImageCommand(file), CancellationToken.None).Result;
 
             //Assert
             result.Should().BeOfType<FormFile>();
@@ -43,11 +41,11 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             //Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
             IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "dummy.txt");
-            _service.Setup(s => s.UploadFile(It.IsAny<IFormFile>(), It.IsAny<string>()))
+            _service.Setup(s => s.UploadImage(It.IsAny<IFormFile>(), It.IsAny<string>()))
                 .ReturnsAsync((IFormFile)null!);
 
             //Act
-            var result = _handler.Handle(new UploadFileCommand(file), CancellationToken.None).Result;
+            var result = _handler.Handle(new UploadImageCommand(file), CancellationToken.None).Result;
 
             //Assert
             result.Should().BeNull();

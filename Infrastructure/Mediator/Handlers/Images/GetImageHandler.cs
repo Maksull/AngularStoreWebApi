@@ -5,11 +5,11 @@ using MediatR;
 
 namespace Infrastructure.Mediator.Handlers.Images
 {
-    public sealed class GetFileHandler : IRequestHandler<GetImageQuery, GetObjectResponse?>
+    public sealed class GetImageHandler : IRequestHandler<GetImageQuery, GetObjectResponse?>
     {
         private readonly IImageService _imageService;
 
-        public GetFileHandler(IImageService imageService)
+        public GetImageHandler(IImageService imageService)
         {
             _imageService = imageService;
         }

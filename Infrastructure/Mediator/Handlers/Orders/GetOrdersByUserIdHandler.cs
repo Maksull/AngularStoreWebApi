@@ -5,11 +5,11 @@ using MediatR;
 
 namespace Infrastructure.Mediator.Handlers.Orders
 {
-    public sealed class GetOrderByUserIdHandler : IRequestHandler<GetOrdersByUserIdQuery, IEnumerable<Order>>
+    public sealed class GetOrdersByUserIdHandler : IRequestHandler<GetOrdersByUserIdQuery, IEnumerable<Order>>
     {
         private readonly IOrderService _orderService;
 
-        public GetOrderByUserIdHandler(IOrderService orderService)
+        public GetOrdersByUserIdHandler(IOrderService orderService)
         {
             _orderService = orderService;
         }

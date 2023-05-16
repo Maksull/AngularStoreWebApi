@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using MockQueryable.Moq;
 using Moq;
+using System.Security.Claims;
 
 namespace Infrastructure.Tests.Services
 {
@@ -119,6 +120,77 @@ namespace Infrastructure.Tests.Services
         #endregion
 
 
+        #region GetUserData
+
+        [Fact]
+        public async Task GetUserData_WhenUserExists_ReturnUserData()
+        {
+            //Arrange
+            string id = Guid.NewGuid().ToString();
+            User user = new()
+            {
+                Id = id,
+                UserName = "Username",
+                NormalizedUserName = "USERNAME",
+                Email = "email",
+                NormalizedEmail = "EMAIL",
+                PhoneNumber = "1234567890",
+                PhoneNumberConfirmed = false,
+                EmailConfirmed = false,
+                RefreshToken = "",
+                RefreshTokenExpired = DateTime.Now,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+            };
+            User[] users = { user };
+
+            var mock = users.AsQueryable().BuildMock();
+            _userManager.Setup(m => m.Users)
+                .Returns(mock);
+
+            var userRequest = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, id)
+            }));
+
+            // Act
+            var result = (await _authService.GetUserData(userRequest))!;
+
+            // Assert
+            result.Should().BeOfType<UserResponse>();
+            result.FirstName.Should().BeEquivalentTo(user.FirstName);
+            result.LastName.Should().BeEquivalentTo(user.FirstName);
+            result.Username.Should().BeEquivalentTo(user.UserName);
+            result.Email.Should().BeEquivalentTo(user.Email);
+            result.PhoneNumber.Should().BeEquivalentTo(user.PhoneNumber);
+
+        }
+
+        [Fact]
+        public async Task GetUserData_WhenUserNotExists_ReturnNull()
+        {
+            //Arrange
+            User[] users = Array.Empty<User>();
+
+            var mock = users.AsQueryable().BuildMock();
+            _userManager.Setup(m => m.Users)
+                .Returns(mock);
+
+            var userRequest = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+            }));
+
+            // Act
+            var result = await _authService.GetUserData(userRequest);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        #endregion
+
+
         #region Register
 
         [Fact]
@@ -216,6 +288,7 @@ namespace Infrastructure.Tests.Services
         }
 
         #endregion
+
 
         private static Mapper GetMapper()
         {

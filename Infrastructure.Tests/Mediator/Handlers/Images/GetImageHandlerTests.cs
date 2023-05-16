@@ -7,12 +7,12 @@ using System.Text;
 
 namespace Infrastructure.Tests.Mediator.Handlers.Images
 {
-    public sealed class GetFileHandlerTests
+    public sealed class GetImageHandlerTests
     {
         private readonly Mock<IImageService> _service;
-        private readonly GetFileHandler _handler;
+        private readonly GetImageHandler _handler;
 
-        public GetFileHandlerTests()
+        public GetImageHandlerTests()
         {
             _service = new();
             _handler = new(_service.Object);
@@ -26,11 +26,11 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             {
                 ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test")),
             };
-            _service.Setup(s => s.GetFile(It.IsAny<string>()))
+            _service.Setup(s => s.GetImage(It.IsAny<string>()))
                 .ReturnsAsync(getObjectResponse);
 
             //Act
-            var result = _handler.Handle(new GetFileQuery(""), CancellationToken.None).Result;
+            var result = _handler.Handle(new GetImageQuery(""), CancellationToken.None).Result;
 
             //Assert
             result.Should().BeOfType<GetObjectResponse>();
@@ -45,11 +45,11 @@ namespace Infrastructure.Tests.Mediator.Handlers.Images
             {
                 ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test")),
             };
-            _service.Setup(s => s.GetFile(It.IsAny<string>()))
+            _service.Setup(s => s.GetImage(It.IsAny<string>()))
                 .ReturnsAsync((GetObjectResponse)null!);
 
             //Act
-            var result = _handler.Handle(new GetFileQuery(""), CancellationToken.None).Result;
+            var result = _handler.Handle(new GetImageQuery(""), CancellationToken.None).Result;
 
             //Assert
             result.Should().BeNull();
