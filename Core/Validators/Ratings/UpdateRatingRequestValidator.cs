@@ -8,7 +8,7 @@ namespace Core.Validators.Ratings
         public UpdateRatingRequestValidator()
         {
             RuleFor(r => r.RatingId).NotEmpty();
-            RuleFor(r => r.ProductId).NotEmpty();
+            RuleFor(r => r.ProductId).GreaterThanOrEqualTo(1);
             RuleFor(r => r.Value).GreaterThanOrEqualTo(0).LessThanOrEqualTo(5);
             RuleFor(r => r.Comment).NotNull();
         }
