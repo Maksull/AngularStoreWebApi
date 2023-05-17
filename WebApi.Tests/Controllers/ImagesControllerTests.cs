@@ -4,7 +4,6 @@ using Core.Mediator.Queries.Images;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using System.Text;
 using WebApi.Controllers;
 
@@ -13,12 +12,14 @@ namespace WebApi.Tests.Controllers
     public sealed class ImagesControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly ImagesController _controller;
 
         public ImagesControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
 

@@ -4,7 +4,6 @@ using Core.Mediator.Commands.Orders;
 using Core.Mediator.Queries.Orders;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -12,12 +11,14 @@ namespace WebApi.Tests.Controllers
     public sealed class OrdersControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly OrdersController _controller;
 
         public OrdersControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
         #region GetOrders

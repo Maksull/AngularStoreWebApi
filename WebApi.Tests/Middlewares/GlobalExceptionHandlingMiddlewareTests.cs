@@ -5,11 +5,13 @@ namespace WebApi.Tests.Middlewares
 {
     public sealed class GlobalExceptionHandlingMiddlewareTests
     {
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly GlobalExceptionHandlingMiddleware _middleware;
 
         public GlobalExceptionHandlingMiddlewareTests()
         {
-            _middleware = new();
+            _logger = new();
+            _middleware = new(_logger.Object);
         }
 
         [Fact]

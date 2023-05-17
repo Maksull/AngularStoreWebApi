@@ -3,7 +3,6 @@ using Core.Mediator.Commands.Auth;
 using Core.Mediator.Queries.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -11,12 +10,14 @@ namespace WebApi.Tests.Controllers
     public sealed class AuthControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
 

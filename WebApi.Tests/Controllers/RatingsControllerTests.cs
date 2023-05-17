@@ -1,11 +1,9 @@
-﻿using Core.Contracts.Controllers.Orders;
-using Core.Contracts.Controllers.Ratings;
+﻿using Core.Contracts.Controllers.Ratings;
 using Core.Entities;
 using Core.Mediator.Commands.Ratings;
 using Core.Mediator.Queries.Ratings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -13,12 +11,14 @@ namespace WebApi.Tests.Controllers
     public sealed class RatingsControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly RatingsController _controller;
 
         public RatingsControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
         #region GetRatings

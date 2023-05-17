@@ -5,7 +5,6 @@ using Core.Mediator.Queries.Products;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using System.Text;
 using WebApi.Controllers;
 
@@ -14,12 +13,14 @@ namespace WebApi.Tests.Controllers
     public sealed class ProductsControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly ProductsController _controller;
 
         public ProductsControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
         #region GetProducts

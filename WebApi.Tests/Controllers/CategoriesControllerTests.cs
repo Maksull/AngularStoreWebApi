@@ -4,7 +4,6 @@ using Core.Mediator.Commands.Categories;
 using Core.Mediator.Queries.Categories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -12,12 +11,14 @@ namespace WebApi.Tests.Controllers
     public sealed class CategoriesControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly CategoriesController _controller;
 
         public CategoriesControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
         #region GetCategories
