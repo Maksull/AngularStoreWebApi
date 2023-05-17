@@ -15,10 +15,12 @@ namespace WebApi.Controllers
     public sealed class SuppliersController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public SuppliersController(IMediator mediator)
+        public SuppliersController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -43,8 +45,11 @@ namespace WebApi.Controllers
 
             if (suppliers.Any())
             {
+                _logger.Information("Suppliers found. Count: {SuppliersCount}.", suppliers.Count());
+
                 return Ok(suppliers);
             }
+            _logger.Information("No Suppliers found.");
 
             return NotFound();
         }
@@ -72,8 +77,11 @@ namespace WebApi.Controllers
 
             if (supplier != null)
             {
+                _logger.Information("Supplier found. SupplierId: {SupplierId}.", id);
+
                 return Ok(supplier);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", id);
 
             return NotFound();
         }
@@ -98,6 +106,8 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateSupplier([FromBody] CreateSupplierRequest createSupplier)
         {
             var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
+
+            _logger.Information("Supplier created. SupplierId: {SupplierId}.", s.SupplierId);
 
             return Ok(s);
         }
@@ -128,8 +138,11 @@ namespace WebApi.Controllers
 
             if (s != null)
             {
+                _logger.Information("Supplier updated. SupplierId: {SupplierId}.", s.SupplierId);
+
                 return Ok(s);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", updateSupplier.SupplierId);
 
             return NotFound();
         }
@@ -156,8 +169,11 @@ namespace WebApi.Controllers
 
             if (supplier != null)
             {
+                _logger.Information("Supplier deleted. SupplierId: {SupplierId}.", id);
+
                 return Ok(supplier);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", id);
 
             return NotFound();
         }

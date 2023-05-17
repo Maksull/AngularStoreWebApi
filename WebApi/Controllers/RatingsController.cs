@@ -14,10 +14,12 @@ namespace WebApi.Controllers
     public sealed class RatingsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public RatingsController(IMediator mediator)
+        public RatingsController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -42,8 +44,11 @@ namespace WebApi.Controllers
 
             if (ratings.Any())
             {
+                _logger.Information("Ratings found. Count: {RatingsCount}.", ratings.Count());
+
                 return Ok(ratings);
             }
+            _logger.Information("No Ratings found.");
 
             return NotFound();
         }
@@ -71,8 +76,11 @@ namespace WebApi.Controllers
 
             if (ratings.Any())
             {
+                _logger.Information("Ratings found. Count: {RatingsCount}.", ratings.Count());
+
                 return Ok(ratings);
             }
+            _logger.Information("No Ratings found.");
 
             return NotFound();
         }
@@ -99,8 +107,11 @@ namespace WebApi.Controllers
 
             if (ratings.Any())
             {
+                _logger.Information("Ratings found. Count: {RatingsCount}.", ratings.Count());
+
                 return Ok(ratings);
             }
+            _logger.Information("No Ratings found.");
 
             return NotFound();
         }
@@ -128,8 +139,11 @@ namespace WebApi.Controllers
 
             if (rating != null)
             {
+                _logger.Information("Rating found. RatingId: {RatingId}.", id);
+
                 return Ok(rating);
             }
+            _logger.Information("Rating not found. RatingId: {RatingId}.", id);
 
             return NotFound();
         }
@@ -156,6 +170,8 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateRating([FromBody] CreateRatingRequest createRating)
         {
             var r = await _mediator.Send(new CreateRatingCommand(createRating, User));
+
+            _logger.Information("Rating created. RatingId: {RatingId}.", r.RatingId);
 
             return Ok(r);
         }
@@ -188,8 +204,11 @@ namespace WebApi.Controllers
 
             if (r != null)
             {
+                _logger.Information("Rating updated. RatingId: {RatingId}.", r.RatingId);
+
                 return Ok(r);
             }
+            _logger.Information("Rating not found. RatingId: {RatingId}.", updateRating.RatingId);
 
             return NotFound();
         }
@@ -217,8 +236,11 @@ namespace WebApi.Controllers
 
             if (rating != null)
             {
+                _logger.Information("Rating deleted. RatingId: {RatingId}.", id);
+
                 return Ok(rating);
             }
+            _logger.Information("Rating not found. RatingId: {RatingId}.", id);
 
             return NotFound();
         }

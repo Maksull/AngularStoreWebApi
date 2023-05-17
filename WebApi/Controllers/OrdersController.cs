@@ -14,10 +14,12 @@ namespace WebApi.Controllers
     public sealed class OrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public OrdersController(IMediator mediator)
+        public OrdersController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -42,8 +44,11 @@ namespace WebApi.Controllers
 
             if (orders.Any())
             {
+                _logger.Information("Orders found. Count: {OrdersCount}.", orders.Count());
+
                 return Ok(orders);
             }
+            _logger.Information("No Orders found.");
 
             return NotFound();
         }
@@ -70,8 +75,11 @@ namespace WebApi.Controllers
 
             if (orders.Any())
             {
+                _logger.Information("Orders found. Count: {OrdersCount}.", orders.Count());
+
                 return Ok(orders);
             }
+            _logger.Information("No Orders found.");
 
             return NotFound();
         }
@@ -99,8 +107,11 @@ namespace WebApi.Controllers
 
             if (order != null)
             {
+                _logger.Information("Order found. OrderId: {OrderId}.", id);
+
                 return Ok(order);
             }
+            _logger.Information("Order not found. OrderId: {OrderId}.", id);
 
             return NotFound();
         }
@@ -140,6 +151,8 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrder)
         {
             var o = await _mediator.Send(new CreateOrderCommand(createOrder, User));
+
+            _logger.Information("Order created. OrderId: {OrderId}.", o.OrderId);
 
             return Ok(o);
         }
@@ -185,8 +198,11 @@ namespace WebApi.Controllers
 
             if (o != null)
             {
+                _logger.Information("Order updated. OrderId: {OrderId}.", o.OrderId);
+
                 return Ok(o);
             }
+            _logger.Information("Order not found. OrderId: {OrderId}.", updateOrder.OrderId);
 
             return NotFound();
         }
@@ -214,8 +230,11 @@ namespace WebApi.Controllers
 
             if (order != null)
             {
+                _logger.Information("Order deleted. OrderId: {OrderId}.", id);
+
                 return Ok(order);
             }
+            _logger.Information("Order not found. OrderId: {OrderId}.", id);
 
             return NotFound();
         }

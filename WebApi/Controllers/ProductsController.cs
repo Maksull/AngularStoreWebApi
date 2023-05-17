@@ -15,10 +15,12 @@ namespace WebApi.Controllers
     public sealed class ProductsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public ProductsController(IMediator mediator)
+        public ProductsController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -43,8 +45,11 @@ namespace WebApi.Controllers
 
             if (products.Any())
             {
+                _logger.Information("Products found. Count: {ProductsCount}.", products.Count());
+
                 return Ok(products);
             }
+            _logger.Information("No Products found.");
 
             return NotFound();
         }
@@ -72,8 +77,11 @@ namespace WebApi.Controllers
 
             if (product != null)
             {
+                _logger.Information("Product found. ProductId: {ProductId}.", id);
+
                 return Ok(product);
             }
+            _logger.Information("Product not found. ProductId: {ProductId}.", id);
 
             return NotFound();
         }
@@ -95,6 +103,8 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProduct)
         {
             var product = await _mediator.Send(new CreateProductCommand(createProduct));
+
+            _logger.Information("Product created. ProductId: {ProductId}.", product.ProductId);
 
             return Ok(product);
         }
@@ -121,8 +131,11 @@ namespace WebApi.Controllers
 
             if (product != null)
             {
+                _logger.Information("Product updated. ProductId: {ProductId}.", product.ProductId);
+
                 return Ok(product);
             }
+            _logger.Information("Product not found. ProductId: {ProductId}.", updateProduct.ProductId);
 
             return NotFound();
         }
@@ -149,8 +162,11 @@ namespace WebApi.Controllers
 
             if (product != null)
             {
+                _logger.Information("Product deleted. ProductId: {ProductId}.", id);
+
                 return Ok(product);
             }
+            _logger.Information("Product not found. ProductId: {ProductId}.", id);
 
             return NotFound();
         }

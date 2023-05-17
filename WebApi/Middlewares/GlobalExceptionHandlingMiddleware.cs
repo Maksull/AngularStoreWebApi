@@ -4,8 +4,12 @@ namespace WebApi.Middlewares
 {
     public sealed class GlobalExceptionHandlingMiddleware : IMiddleware
     {
+        private readonly Serilog.ILogger _logger;
 
-        public GlobalExceptionHandlingMiddleware() { }
+        public GlobalExceptionHandlingMiddleware(Serilog.ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
@@ -13,8 +17,9 @@ namespace WebApi.Middlewares
             {
                 await next(context);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error("An unhandled exception occurred. Exception: {Exception}", ex);
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
@@ -23,7 +28,7 @@ namespace WebApi.Middlewares
                     Status = StatusCodes.Status500InternalServerError,
                     Type = "Server error",
                     Title = "Server error",
-                    Detail = "An internal server error has occurred",
+                    Detail = $"An internal server error has occurred",
                 };
 
 

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
 using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
 using System.Text;
@@ -72,6 +74,20 @@ builder.Services.Configure<MvcNewtonsoftJsonOptions>(opts =>
 {
     opts.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
     opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+       .ReadFrom.Configuration(builder.Configuration)
+       .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(builder.Configuration["ElasticsearchConfiguration:Uri"]!))
+       {
+           IndexFormat = $"angular-store-logs-{builder.Environment.EnvironmentName}-{DateTime.UtcNow:yyyy-MM}",
+           AutoRegisterTemplate = true,
+           NumberOfShards = 2,
+           NumberOfReplicas = 1,
+       });
 });
 
 #endregion

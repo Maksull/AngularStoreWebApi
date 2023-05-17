@@ -15,10 +15,12 @@ namespace WebApi.Controllers
     public sealed class CategoriesController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public CategoriesController(IMediator mediator)
+        public CategoriesController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -43,8 +45,11 @@ namespace WebApi.Controllers
 
             if (categories.Any())
             {
+                _logger.Information("Categories found. Count: {CategoriesCount}.", categories.Count());
+
                 return Ok(categories);
             }
+            _logger.Information("No Categories found.");
 
             return NotFound();
         }
@@ -72,8 +77,11 @@ namespace WebApi.Controllers
 
             if (category != null)
             {
+                _logger.Information("Category found. CategoryId: {CategoryId}.", id);
+
                 return Ok(category);
             }
+            _logger.Information("Category not found. CategoryId: {CategoryId}.", id);
 
             return NotFound();
         }
@@ -97,6 +105,8 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest createCategory)
         {
             var c = await _mediator.Send(new CreateCategoryCommand(createCategory));
+
+            _logger.Information("Category created. CategoryId: {CategoryId}.", c.CategoryId);
 
             return Ok(c);
         }
@@ -126,8 +136,11 @@ namespace WebApi.Controllers
 
             if (c != null)
             {
+                _logger.Information("Category updated. CategoryId: {CategoryId}.", c.CategoryId);
+
                 return Ok(c);
             }
+            _logger.Information("Category not found. CategoryId: {CategoryId}.", updateCategory.CategoryId);
 
             return NotFound();
         }
@@ -154,8 +167,11 @@ namespace WebApi.Controllers
 
             if (category != null)
             {
+                _logger.Information("Category deleted. CategoryId: {CategoryId}.", id);
+
                 return Ok(category);
             }
+            _logger.Information("Category not found. CategoryId: {CategoryId}.", id);
 
             return NotFound();
         }

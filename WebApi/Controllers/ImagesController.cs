@@ -13,10 +13,12 @@ namespace WebApi.Controllers
     public sealed class ImagesController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public ImagesController(IMediator mediator)
+        public ImagesController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -40,8 +42,11 @@ namespace WebApi.Controllers
 
             if (f != null)
             {
+                _logger.Information("Image uploaded successfully. FileName: {FileName}", f.FileName);
+
                 return Ok($"{f.FileName} was uploaded successfully");
             }
+            _logger.Information("Bucket does not exists.");
 
             return NotFound();
         }
@@ -69,8 +74,11 @@ namespace WebApi.Controllers
 
             if (file != null)
             {
+                _logger.Information("Image found. Key: {Key}", key);
+
                 return File(file.ResponseStream, file.Headers.ContentType);
             }
+            _logger.Information("Image not found. Key: {Key}", key);
 
             return NotFound();
         }

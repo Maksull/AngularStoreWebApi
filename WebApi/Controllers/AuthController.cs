@@ -4,7 +4,6 @@ using Core.Mediator.Queries.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace WebApi.Controllers
 {
@@ -14,10 +13,12 @@ namespace WebApi.Controllers
     public sealed class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -45,8 +46,11 @@ namespace WebApi.Controllers
 
             if (result != null)
             {
+                _logger.Information("Login successful for username: {Username}", request.Username);
+
                 return Ok(result);
             }
+            _logger.Information("Invalid credentials for username: {Username}", request.Username);
 
             return BadRequest("Invalid credentials");
         }
@@ -80,8 +84,11 @@ namespace WebApi.Controllers
 
             if (result)
             {
+                _logger.Information("User registered successfully. Username: {Username}", request.Username);
+
                 return Ok();
             }
+            _logger.Information("Failed to register user. Username: {Username}", request.Username);
 
             return BadRequest();
         }
@@ -111,8 +118,11 @@ namespace WebApi.Controllers
 
             if (result != null)
             {
+                _logger.Information("JWT refreshed successfully.");
+
                 return Ok(result);
             }
+            _logger.Information("Invalid refresh token");
 
             return Unauthorized();
         }
@@ -139,8 +149,11 @@ namespace WebApi.Controllers
 
             if (result != null)
             {
+                _logger.Information("User data retrieved successfully");
+
                 return Ok(result);
             }
+            _logger.Information("User not found");
 
             return NotFound();
         }
@@ -161,6 +174,8 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
         public IActionResult Protected()
         {
+            _logger.Information("Protected method called.");
+
             return Ok();
         }
 
@@ -180,6 +195,8 @@ namespace WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
         public IActionResult AdminProtected()
         {
+            _logger.Information("AdminProtected method called.");
+
             return Ok();
         }
     }
