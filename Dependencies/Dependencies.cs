@@ -1,6 +1,4 @@
-﻿using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
-using Amazon.S3;
+﻿using Amazon.S3;
 using Core.Entities;
 using Core.Validators.Products;
 using FluentValidation;
@@ -16,7 +14,6 @@ using Infrastructure.UnitOfWorks;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -138,18 +135,7 @@ namespace Dependencies
 
         private static void ConfigureAwsS3Bucket(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
-            if (environment.IsProduction())
-            {
-                services.AddAWSService<IAmazonS3>(new AWSOptions
-                {
-                    Credentials = new BasicAWSCredentials(configuration["AWS:AccessKeyId"], configuration["AWS:SecretAccessKey"])
-                });
-            }
-            else
-            {
-                services.AddDefaultAWSOptions(configuration.GetAWSOptions());
-                services.AddAWSService<IAmazonS3>();
-            }
+            services.AddAWSService<IAmazonS3>();
         }
 
         private static void ConfigureRedisCache(this IServiceCollection services, IConfiguration configuration)

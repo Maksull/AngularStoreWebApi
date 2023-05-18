@@ -1,3 +1,4 @@
+using Amazon;
 using Dependencies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -89,6 +90,16 @@ builder.Host.UseSerilog((context, configuration) =>
            NumberOfReplicas = 1,
        });
 });
+
+builder.Configuration.AddSecretsManager(region: RegionEndpoint.EUNorth1,
+    configurator: options =>
+    {
+        options.SecretFilter = entry => entry.Name.StartsWith($"{builder.Environment.EnvironmentName}_WebApi_");
+        options.KeyGenerator = (_, s) => s
+            .Replace($"{builder.Environment.EnvironmentName}_WebApi_", string.Empty)
+            .Replace("__", ":");
+        options.PollingInterval = TimeSpan.FromSeconds(10);
+    });
 
 #endregion
 
