@@ -1,4 +1,6 @@
 using Amazon;
+using App.Metrics.AspNetCore;
+using App.Metrics.Formatters.Prometheus;
 using Dependencies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -100,6 +102,19 @@ builder.Configuration.AddSecretsManager(region: RegionEndpoint.EUNorth1,
             .Replace("__", ":");
         options.PollingInterval = TimeSpan.FromSeconds(10);
     });
+
+
+builder.Services.AddMetrics();
+builder.Host.UseMetricsWebTracking();
+builder.Host.UseMetrics(opts =>
+{
+    opts.EndpointOptions = endpointOptions =>
+    {
+        endpointOptions.MetricsTextEndpointOutputFormatter = new MetricsPrometheusTextOutputFormatter();
+        endpointOptions.MetricsEndpointOutputFormatter = new MetricsPrometheusProtobufOutputFormatter();
+        endpointOptions.EnvironmentInfoEndpointEnabled = false;
+    };
+});
 
 #endregion
 
