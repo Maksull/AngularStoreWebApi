@@ -80,6 +80,10 @@ namespace Infrastructure.Services
             {
                 await _unitOfWork.Category.UpdateCategoryAsync(category);
 
+                string key = $"CategoryId={category.CategoryId}";
+
+                await _cacheService.RemoveAsync(key);
+
                 return category;
             }
 

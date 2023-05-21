@@ -91,6 +91,10 @@ namespace Infrastructure.Services
             {
                 await _unitOfWork.Rating.UpdateRatingAsync(rating);
 
+                string key = $"RatingId={rating.RatingId}";
+
+                await _cacheService.RemoveAsync(key);
+
                 return rating;
             }
 

@@ -92,6 +92,10 @@ namespace Infrastructure.Services
             {
                 await _unitOfWork.Order.UpdateOrderAsync(order);
 
+                string key = $"OrderId={order.OrderId}";
+
+                await _cacheService.RemoveAsync(key);
+
                 return order;
             }
 

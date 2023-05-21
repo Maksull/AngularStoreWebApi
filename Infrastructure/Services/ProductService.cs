@@ -96,6 +96,10 @@ namespace Infrastructure.Services
 
                 await _unitOfWork.Product.UpdateProductAsync(product);
 
+                string key = $"ProductId={product.ProductId}";
+
+                await _cacheService.RemoveAsync(key);
+
                 return product;
             }
 

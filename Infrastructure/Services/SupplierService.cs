@@ -80,6 +80,10 @@ namespace Infrastructure.Services
             {
                 await _unitOfWork.Supplier.UpdateSupplierAsync(supplier);
 
+                string key = $"SupplierId={supplier.SupplierId}";
+
+                await _cacheService.RemoveAsync(key);
+
                 return supplier;
             }
 
