@@ -21,30 +21,37 @@ namespace Infrastructure.Tests.Mediator.Handlers.Auth
         public void Handle_WhenCalled_ReturnTrue()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email","PhoneNumber","Password", "Password");
+            List<string> errors = new();
+
             _service.Setup(s => s.Register(It.IsAny<RegisterRequest>()))
-                .ReturnsAsync(true);
+                .ReturnsAsync(errors);
 
             //Act
             var result = _handler.Handle(new RegisterCommand(registerRequest), CancellationToken.None).Result;
 
             //Assert
-            result.Should().BeTrue();
+            result.Should().BeEmpty();
         }
 
         [Fact]
         public void Handle_WhenCalled_ReturnFalse()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "PhoneNumber", "Password", "Password");
+            List<string> errors = new()
+            {
+                "error"
+            };
+
             _service.Setup(s => s.Register(It.IsAny<RegisterRequest>()))
-                .ReturnsAsync(false);
+                .ReturnsAsync(errors);
 
             //Act
             var result = _handler.Handle(new RegisterCommand(registerRequest), CancellationToken.None).Result;
 
             //Assert
-            result.Should().BeFalse();
+            result.Should().BeEquivalentTo(errors);
         }
     }
 }

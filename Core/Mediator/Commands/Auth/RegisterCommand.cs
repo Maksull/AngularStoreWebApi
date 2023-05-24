@@ -3,5 +3,5 @@ using MediatR;
 
 namespace Core.Mediator.Commands.Auth
 {
-    public sealed record RegisterCommand(RegisterRequest RegisterRequest) : IRequest<bool>;
+    public sealed record RegisterCommand(RegisterRequest RegisterRequest) : IRequest<List<string>>;
 }

@@ -47,7 +47,7 @@ namespace Infrastructure.Services
             return new(token, refreshToken);
         }
 
-        public async Task<bool> Register(RegisterRequest register)
+        public async Task<List<string>> Register(RegisterRequest register)
         {
             User user = _mapper.Map<User>(register);
 
@@ -57,10 +57,16 @@ namespace Infrastructure.Services
             {
                 await _userManager.AddToRoleAsync(user, "Customer");
 
-                return true;
+                return new List<string>();
+            }
+            List<string> errors = new();
+
+            foreach (var error in result.Errors)
+            {
+                errors.Add(error.Description);
             }
 
-            return false;
+            return errors;
         }
 
         public async Task<JwtResponse?> Refresh(RefreshTokenRequest request)

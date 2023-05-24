@@ -73,10 +73,11 @@ namespace WebApi.Tests.Controllers
         public void Register_WhenCalled_ReturnOk()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "+380554447788", "Password", "Password");
+            List<string> errors = new();
 
             _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .ReturnsAsync(true);
+                .ReturnsAsync(errors);
 
             //Act
             var response = (_controller.Register(registerRequest).Result as OkResult)!;
@@ -89,18 +90,25 @@ namespace WebApi.Tests.Controllers
         public void Register_WhenCalled_ReturnBadRequest()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "+380554447788", "Password", "Password");
+            List<string> errors = new()
+            {
+                "error"
+            };
 
             _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .ReturnsAsync(false);
+                .ReturnsAsync(errors);
 
 
             //Act
             var response = _controller.Register(registerRequest).Result;
-            var result = (response as BadRequestResult)!;
+            var result = (response as BadRequestObjectResult)!;
+            var value = (result.Value as RegisterFailed)!;
 
             //Assert
-            result.Should().BeOfType<BadRequestResult>();
+            result.Should().BeOfType<BadRequestObjectResult>();
+            value.Should().BeOfType<RegisterFailed>();
+            value.Errors.Should().BeEquivalentTo(errors);
         }
 
         #endregion

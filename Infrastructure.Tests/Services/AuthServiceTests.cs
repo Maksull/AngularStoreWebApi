@@ -194,10 +194,10 @@ namespace Infrastructure.Tests.Services
         #region Register
 
         [Fact]
-        public async Task Register_WhenSucceeded_ReturnTrue()
+        public async Task Register_WhenSucceeded_ReturnEmptyList()
         {
             // Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "PhoneNumber", "Password", "Password");
 
             _userManager.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Success);
@@ -206,14 +206,14 @@ namespace Infrastructure.Tests.Services
             var result = (await _authService.Register(registerRequest))!;
 
             // Assert
-            result.Should().BeTrue();
+            result.Should().BeEmpty();
         }
 
         [Fact]
-        public async Task Register_WhenNotSucceeded_ReturnFalse()
+        public async Task Register_WhenNotSucceeded_ReturnErrors()
         {
             // Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "PhoneNumber", "Password", "Password");
 
             _userManager.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Failed());
@@ -222,7 +222,7 @@ namespace Infrastructure.Tests.Services
             var result = (await _authService.Register(registerRequest))!;
 
             // Assert
-            result.Should().BeFalse();
+            result.Should().BeOfType<List<string>>();
         }
 
         #endregion

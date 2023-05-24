@@ -82,7 +82,7 @@ namespace WebApi.Controllers
         {
             var result = await _mediator.Send(new RegisterCommand(request));
 
-            if (result)
+            if (!result.Any())
             {
                 _logger.Information("User registered successfully. Username: {Username}", request.Username);
 
@@ -90,7 +90,7 @@ namespace WebApi.Controllers
             }
             _logger.Information("Failed to register user. Username: {Username}", request.Username);
 
-            return BadRequest();
+            return BadRequest(new RegisterFailed(result));
         }
 
         /// <summary>
