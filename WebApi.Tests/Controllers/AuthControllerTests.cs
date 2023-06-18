@@ -197,6 +197,120 @@ namespace WebApi.Tests.Controllers
         #endregion
 
 
+        #region ConfirmEmail
+
+        [Fact]
+        public void ConfirmEmail_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ConfirmEmailCommand confirmEmailCommand = new(Guid.NewGuid().ToString(), "Token");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmEmailCommand>(), default))
+                .ReturnsAsync(true);
+
+            //Act
+            var response = (_controller.ConfirmEmail(confirmEmailCommand.UserId, confirmEmailCommand.Token).Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ConfirmEmail_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            ConfirmEmailCommand confirmEmailCommand = new(Guid.Empty.ToString(), "Token");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmEmailCommand>(), default))
+                .ReturnsAsync(false);
+
+            //Act
+            var response = (_controller.ConfirmEmail(confirmEmailCommand.UserId, confirmEmailCommand.Token).Result as NotFoundResult)!;
+
+            //Assert
+            response.Should().BeOfType<NotFoundResult>();
+        }
+
+        #endregion
+
+
+        #region ResetPassword
+
+        [Fact]
+        public void ResetPassword_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ResetPasswordCommand resetPasswordCommand = new(Guid.NewGuid().ToString(), "username");
+            _mediator.Setup(m => m.Send(It.IsAny<ResetPasswordCommand>(), default))
+                .ReturnsAsync(true);
+
+            //Act
+            var response = (_controller.ResetPassword(resetPasswordCommand.UserId, resetPasswordCommand.Username).Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ResetPassword_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            ResetPasswordCommand resetPasswordCommand = new(Guid.Empty.ToString(), "username");
+            _mediator.Setup(m => m.Send(It.IsAny<ResetPasswordCommand>(), default))
+                .ReturnsAsync(false);
+
+            //Act
+            var response = (_controller.ResetPassword(resetPasswordCommand.UserId, resetPasswordCommand.Username).Result as NotFoundResult)!;
+
+            //Assert
+            response.Should().BeOfType<NotFoundResult>();
+        }
+
+        #endregion
+
+
+        #region ConfirmResetPassword
+
+        [Fact]
+        public void ConfirmResetPassword_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ConfirmResetPasswordCommand confirmResetPasswordCommand = new(Guid.NewGuid().ToString(), "token", "newPassword");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmResetPasswordCommand>(), default))
+                .ReturnsAsync(new List<string>());
+
+            //Act
+            var response = (_controller.ConfirmResetPassword(confirmResetPasswordCommand.UserId, confirmResetPasswordCommand.Token, confirmResetPasswordCommand.NewPassword)
+                .Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ConfirmResetPassword_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            List<string> errors = new()
+            {
+                "Test error",
+            };
+            ConfirmResetPasswordCommand confirmResetPasswordCommand = new(Guid.Empty.ToString(), "token", "newPassword");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmResetPasswordCommand>(), default))
+                .ReturnsAsync(errors);
+
+            //Assert
+            var response = _controller.ConfirmResetPassword(confirmResetPasswordCommand.UserId, confirmResetPasswordCommand.Token, confirmResetPasswordCommand.NewPassword).Result;
+            var result = (response as BadRequestObjectResult)!;
+            var value = (result.Value as ConfirmResetPasswordFailed)!;
+
+            //Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            value.Should().BeOfType<ConfirmResetPasswordFailed>();
+            value.Errors.Should().BeEquivalentTo(errors);
+        }
+
+        #endregion
+
+
         [Fact]
         public void Protected_WhenCalled_ReturnOk()
         {

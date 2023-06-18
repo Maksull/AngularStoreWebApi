@@ -51,7 +51,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddCors(opts => opts.AddPolicy("StoreOrigins", policy =>
 {
-    policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    policy.WithOrigins(builder.Configuration["AngularStore:Url"]!).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 }));
 
 builder.Services.ConfigureDI(builder.Configuration, builder.Environment);

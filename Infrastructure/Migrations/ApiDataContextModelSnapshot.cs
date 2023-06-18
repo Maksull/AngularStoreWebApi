@@ -411,22 +411,22 @@ namespace Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "1049fd38-4c3d-4bde-b2c9-4162878b2573",
+                            Id = "60d29b41-05a1-46d9-b6f6-25991edc6b53",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fc98bf98-b95d-4afe-bbe9-806fc9bd71b1",
+                            ConcurrencyStamp = "6f1f5ecb-ee83-48fd-9ce2-b681d83aa597",
                             Email = "admin@example.com",
-                            EmailConfirmed = false,
+                            EmailConfirmed = true,
                             FirstName = "",
                             LastName = "",
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@EXAMPLE.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI8aSrsbuFwt+3jABcqGcE5F3jmy/eG6mGYZdXqIcYbu56Pk7zlZZhgHXIyk0f1Z0g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENJyCKobVstBJ6mKMt/VN6cbit0+HmTXX6/y5oeyorNF3Z9izDx0hseOLgtkcQPlYA==",
                             PhoneNumber = "1234567890",
                             PhoneNumberConfirmed = false,
                             RefreshToken = "",
                             RefreshTokenExpired = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            SecurityStamp = "6cddcd57-6e10-468b-879a-b493160c9cd2",
+                            SecurityStamp = "7dbc1780-4527-45d8-8bd0-8b7b5c017779",
                             TwoFactorEnabled = false,
                             UserName = "Admin"
                         });
@@ -461,13 +461,13 @@ namespace Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "bd015f39-7cbe-4343-b202-fdc80b7aea48",
+                            Id = "b51f0155-540c-43ea-a3b8-d71a59a6c5f6",
                             Name = "Customer",
                             NormalizedName = "CUSTOMER"
                         },
                         new
                         {
-                            Id = "7b54acbc-9d80-4c74-a589-48233e36b11a",
+                            Id = "5f2e9ae2-5138-44dd-9f76-27db1baa514f",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         });

@@ -73,7 +73,9 @@ namespace Dependencies
                 opts.UseSqlServer(configuration["ConnectionStrings:Store"]!);
             });
 
-            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApiDataContext>();
+            services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<ApiDataContext>()
+                .AddDefaultTokenProviders();
 
         }
 

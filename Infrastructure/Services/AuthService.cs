@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Web;
 
 namespace Infrastructure.Services
 {
@@ -17,12 +18,14 @@ namespace Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly UserManager<User> _userManager;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IMapper mapper, IConfiguration configuration, UserManager<User> userManager)
+        public AuthService(IMapper mapper, IConfiguration configuration, UserManager<User> userManager, IEmailService emailService)
         {
             _mapper = mapper;
             _configuration = configuration;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         public async Task<JwtResponse?> Login(LoginRequest login)
@@ -38,6 +41,12 @@ namespace Infrastructure.Services
                 return null;
             }
 
+            var result = await _userManager.IsEmailConfirmedAsync(user);
+            if (result == false)
+            {
+                return null;
+            }
+
             string token = await CreateToken(user);
 
             var refreshToken = GenerateRefreshToken();
@@ -47,7 +56,7 @@ namespace Infrastructure.Services
             return new(token, refreshToken);
         }
 
-        public async Task<List<string>> Register(RegisterRequest register)
+        public async Task<IEnumerable<string>> Register(RegisterRequest register)
         {
             User user = _mapper.Map<User>(register);
 
@@ -57,9 +66,97 @@ namespace Infrastructure.Services
             {
                 await _userManager.AddToRoleAsync(user, "Customer");
 
-                return new List<string>();
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                //var confirmationLink = $"https://localhost:44301/api/auth/confirmEmail?userId={user.Id}&token={HttpUtility.UrlEncode(token)}";
+
+                var confirmationLink = $"{_configuration["AngularStore:Url"]}/login/{user.Id}/{HttpUtility.UrlEncode(token)}";
+
+
+                string emailBody = $"Please confirm your email by clicking the link below:<br/><br/><a href=\"{confirmationLink}\">Confirm Email</a>";
+
+                _emailService.Send(new Core.Contracts.Services.EmailService.EmailRequest(user.Email!, "Email confirmation", emailBody));
+
+                return Enumerable.Empty<string>();
             }
+
             List<string> errors = new();
+            foreach (var error in result.Errors)
+            {
+                errors.Add(error.Description);
+            }
+
+            return errors;
+        }
+
+        public async Task<bool> ConfirmEmail(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
+            if (result.Succeeded)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> ResetPassword(string? userId, string? username)
+        {
+            User? user = null;
+            if (userId is not null)
+            {
+                user = await _userManager.FindByIdAsync(userId);
+            }
+            if (username is not null)
+            {
+                user = await _userManager.FindByNameAsync(username);
+            }
+
+
+            if (user is null)
+            {
+                return false;
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            //var confirmationLink = $"https://localhost:44301/api/auth/confirmResetPassword?userId={user.Id}&token={HttpUtility.UrlEncode(token)}&newPassword=NewPassword123$";
+
+            var confirmationLink = $"{_configuration["AngularStore:Url"]}/login/resetPassword/{user.Id}/{HttpUtility.UrlEncode(token)}";
+
+            string emailBody = $"Please confirm your password by clicking the link below:<br/><br/><a href=\"{confirmationLink}\">Reset Password</a>";
+
+            _emailService.Send(new Core.Contracts.Services.EmailService.EmailRequest(user.Email!, "Password reset", emailBody));
+
+            return true;
+        }
+
+        public async Task<IEnumerable<string>> ConfirmResetPassword(string userId, string token, string newPassword)
+        {
+            List<string> errors = new();
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                errors.Add("The user does not exist");
+
+                return errors;
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            if (result.Succeeded)
+            {
+                return Enumerable.Empty<string>();
+            }
 
             foreach (var error in result.Errors)
             {

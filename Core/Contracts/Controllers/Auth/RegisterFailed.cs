@@ -1,4 +1,4 @@
 ﻿namespace Core.Contracts.Controllers.Auth
 {
-    public sealed  record RegisterFailed(List<string> Errors);
+    public sealed record RegisterFailed(IEnumerable<string> Errors);
 }

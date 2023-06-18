@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Infrastructure.Mediator.Handlers.Auth
 {
-    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, List<string>>
+    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, IEnumerable<string>>
     {
         private readonly IAuthService _authService;
 
@@ -13,7 +13,7 @@ namespace Infrastructure.Mediator.Handlers.Auth
             _authService = authService;
         }
 
-        public async Task<List<string>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<string>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             return await _authService.Register(request.RegisterRequest);
         }

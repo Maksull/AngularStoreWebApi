@@ -77,7 +77,7 @@ namespace WebApi.Controllers
         /// <response code="400">If the user was not created</response>
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestObjectResult))]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _mediator.Send(new RegisterCommand(request));
@@ -156,6 +156,96 @@ namespace WebApi.Controllers
             _logger.Information("User not found");
 
             return NotFound();
+        }
+
+        /// <summary>
+        /// Confirm user's email address by sending userId and token.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/auth/confirmEmail
+        ///     
+        /// </remarks>
+        /// <returns>Returns if the email confirmation succeeded</returns>
+        /// <response code="200">Returned if the confirmation succeeded</response>
+        /// <response code="404">Returned if the user does not exist</response>
+        [HttpGet("confirmEmail")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        {
+            var result = await _mediator.Send(new ConfirmEmailCommand(userId, token));
+
+            if (result)
+            {
+                _logger.Information("Email confirmed. UserId: {userId}", userId);
+
+                return Ok();
+            }
+            _logger.Information("User not found");
+
+            return NotFound();
+        }
+
+        /// <summary>
+        /// Send email with token required for reset password process.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/auth/resetPassword
+        ///     
+        /// </remarks>
+        /// <returns>Returns if the email sent</returns>
+        /// <response code="200">Returned if the email sent</response>
+        /// <response code="404">Returned if the user does not exist</response>
+        [HttpGet("resetPassword")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
+        public async Task<IActionResult> ResetPassword([FromQuery] string? userId = null, [FromQuery] string? username = null)
+        {
+            var result = await _mediator.Send(new ResetPasswordCommand(userId, username));
+
+            if (result)
+            {
+                _logger.Information("Reset password asked for {userId}", userId);
+
+                return Ok();
+            }
+            _logger.Information("User not found");
+
+            return NotFound();
+        }
+
+        /// <summary>
+        /// Confirm user's reset password action by sending userId, token and new password.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/auth/confirmResetPassword
+        ///     
+        /// </remarks>
+        /// <returns>Returns if the password reset succeeded</returns>
+        /// <response code="200">Returned if the password reset succeeded</response>
+        /// <response code="404">Returned if the user does not exist</response>
+        [HttpGet("confirmResetPassword")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestObjectResult))]
+        public async Task<IActionResult> ConfirmResetPassword([FromQuery] string userId, [FromQuery] string token, [FromQuery] string newPassword)
+        {
+            var result = await _mediator.Send(new ConfirmResetPasswordCommand(userId, token, newPassword));
+
+            if (!result.Any())
+            {
+                _logger.Information("Reset password for {userId}", userId);
+
+                return Ok();
+            }
+            _logger.Information("User not found");
+
+            return BadRequest(new ConfirmResetPasswordFailed(result));
         }
 
         /// <summary>
