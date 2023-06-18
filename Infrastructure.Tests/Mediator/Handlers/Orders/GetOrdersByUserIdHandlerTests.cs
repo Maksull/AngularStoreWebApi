@@ -1,4 +1,6 @@
-﻿using Core.Entities;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Entities;
 using Core.Mediator.Queries.Orders;
 using Infrastructure.Mediator.Handlers.Orders;
 using Infrastructure.Services.Interfaces;
@@ -10,12 +12,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
     public sealed class GetOrdersByUserIdHandlerTests
     {
         private readonly Mock<IOrderService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly GetOrdersByUserIdHandler _handler;
 
         public GetOrdersByUserIdHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -39,6 +43,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
             };
             _service.Setup(s => s.GetOrdersByUserId(It.IsAny<ClaimsPrincipal>()))
                 .Returns(orders);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new GetOrdersByUserIdQuery(new ClaimsPrincipal()), CancellationToken.None).Result;

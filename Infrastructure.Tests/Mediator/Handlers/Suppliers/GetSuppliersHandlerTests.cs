@@ -1,4 +1,6 @@
-﻿using Core.Entities;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Entities;
 using Core.Mediator.Queries.Suppliers;
 using Infrastructure.Mediator.Handlers.Suppliers;
 using Infrastructure.Services.Interfaces;
@@ -9,12 +11,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Suppliers
     public sealed class GetSuppliersHandlerTests
     {
         private readonly Mock<ISupplierService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly GetSuppliersHandler _handler;
 
         public GetSuppliersHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -38,6 +42,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Suppliers
             };
             _service.Setup(s => s.GetSuppliers())
                 .Returns(suppliers);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new GetSuppliersQuery(), CancellationToken.None).Result;

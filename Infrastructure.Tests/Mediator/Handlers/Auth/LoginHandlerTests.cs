@@ -1,4 +1,6 @@
-﻿using Core.Contracts.Controllers.Auth;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
 using Infrastructure.Mediator.Handlers.Auth;
 using Infrastructure.Services.Interfaces;
@@ -9,12 +11,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Auth
     public sealed class LoginHandlerTests
     {
         private readonly Mock<IAuthService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly LoginHandler _handler;
 
         public LoginHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -25,6 +29,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Auth
             JwtResponse jwtResponse = new("jwt", new());
             _service.Setup(s => s.Login(It.IsAny<LoginRequest>()))
                 .ReturnsAsync(jwtResponse);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new LoginCommand(loginRequest), CancellationToken.None).Result;
@@ -42,6 +49,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Auth
             JwtResponse jwtResponse = new("jwt", new());
             _service.Setup(s => s.Login(It.IsAny<LoginRequest>()))
                 .ReturnsAsync((JwtResponse)null!);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new LoginCommand(loginRequest), CancellationToken.None).Result;

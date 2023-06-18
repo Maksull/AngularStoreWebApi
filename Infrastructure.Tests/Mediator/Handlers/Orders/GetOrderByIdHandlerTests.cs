@@ -1,4 +1,6 @@
-﻿using Core.Entities;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Entities;
 using Core.Mediator.Queries.Orders;
 using Infrastructure.Mediator.Handlers.Orders;
 using Infrastructure.Services.Interfaces;
@@ -9,12 +11,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
     public sealed class GetOrderByIdHandlerTests
     {
         private readonly Mock<IOrderService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly GetOrderByIdHandler _handler;
 
         public GetOrderByIdHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -35,6 +39,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
             _service.Setup(s => s.GetOrder(It.IsAny<long>()))
                 .ReturnsAsync(order);
 
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
+
             //Act
             var result = _handler.Handle(new GetOrderByIdQuery(1), CancellationToken.None).Result;
 
@@ -49,6 +56,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
             //Arrange
             _service.Setup(s => s.DeleteOrder(It.IsAny<long>()))
                 .ReturnsAsync((Order)null!);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new GetOrderByIdQuery(1), CancellationToken.None).Result;
