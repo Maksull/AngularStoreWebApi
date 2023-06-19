@@ -1,6 +1,4 @@
-﻿using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
-using Amazon.S3;
+﻿using Amazon.S3;
 using Core.Entities;
 using Core.Validators.Products;
 using FluentValidation;
@@ -16,7 +14,6 @@ using Infrastructure.UnitOfWorks;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -50,17 +47,6 @@ namespace Dependencies
                     try
                     {
                         appContext.Database.Migrate();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception(ex.Message);
-                    }
-                }
-                using (var appContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>())
-                {
-                    try
-                    {
-                        appContext.Database.Migrate();
 
                         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
@@ -69,9 +55,9 @@ namespace Dependencies
                         var result = userManager.AddToRoleAsync(user, "Admin").Result;
 
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        throw new Exception("Identity Migration failed");
+                        throw new Exception(ex.Message);
                     }
                 }
             }
@@ -86,12 +72,10 @@ namespace Dependencies
             {
                 opts.UseSqlServer(configuration["ConnectionStrings:Store"]!);
             });
-            services.AddDbContext<IdentityDataContext>(opts =>
-            {
-                opts.UseSqlServer(configuration["ConnectionStrings:Identity"]!);
-            });
 
-            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<IdentityDataContext>();
+            services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<ApiDataContext>()
+                .AddDefaultTokenProviders();
 
         }
 
@@ -107,6 +91,8 @@ namespace Dependencies
                 .AddScoped(provider => new Lazy<ISupplierRepository>(() => provider.GetRequiredService<ISupplierRepository>()));
             services.AddScoped<IOrderRepository, OrderRepository>()
                 .AddScoped(provider => new Lazy<IOrderRepository>(() => provider.GetRequiredService<IOrderRepository>()));
+            services.AddScoped<IRatingRepository, RatingRepository>()
+                .AddScoped(provider => new Lazy<IRatingRepository>(() => provider.GetRequiredService<IRatingRepository>()));
 
         }
 
@@ -118,6 +104,7 @@ namespace Dependencies
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IImageService, ImageService>();
+            services.AddScoped<IRatingService, RatingService>();
 
             services.AddScoped<ICacheService, CacheService>();
 
@@ -150,18 +137,7 @@ namespace Dependencies
 
         private static void ConfigureAwsS3Bucket(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
-            if (environment.IsProduction())
-            {
-                services.AddAWSService<IAmazonS3>(new AWSOptions
-                {
-                    Credentials = new BasicAWSCredentials(configuration["AWS:AccessKeyId"], configuration["AWS:SecretAccessKey"])
-                });
-            }
-            else
-            {
-                services.AddDefaultAWSOptions(configuration.GetAWSOptions());
-                services.AddAWSService<IAmazonS3>();
-            }
+            services.AddAWSService<IAmazonS3>();
         }
 
         private static void ConfigureRedisCache(this IServiceCollection services, IConfiguration configuration)

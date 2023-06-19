@@ -11,124 +11,171 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public sealed class SuppliersController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly Serilog.ILogger _logger;
 
-        public SuppliersController(IMediator mediator)
+        public SuppliersController(IMediator mediator, Serilog.ILogger logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
+        /// <summary>
+        /// Gets a list of suppliers.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/suppliers
+        ///     
+        /// </remarks>
+        /// <returns>Returns the list of suppliers</returns>
+        /// <response code="200">Returns the list of suppliers</response>
+        /// <response code="404">If the suppliers do not exist</response>
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Supplier>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> GetSuppliers()
         {
-            try
-            {
-                var suppliers = await _mediator.Send(new GetSuppliersQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
 
-                if (suppliers.Any())
-                {
-                    return Ok(suppliers);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (suppliers.Any())
             {
-                return Problem(ex.Message);
+                _logger.Information("Suppliers found. Count: {SuppliersCount}.", suppliers.Count());
+
+                return Ok(suppliers);
             }
+            _logger.Information("No Suppliers found.");
+
+            return NotFound();
         }
 
+        /// <summary>
+        /// Gets a supplier by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET api/suppliers/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the supplier. This ID is used to retrieve a specific supplier from the database.</param>
+        /// <returns>A supplier</returns>
+        /// <response code="200">Returns the supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> GetSupplier(long id)
+        public async Task<IActionResult> GetSupplier([FromRoute] long id)
         {
-            try
-            {
-                var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
+            var supplier = await _mediator.Send(new GetSupplierByIdQuery(id));
 
-                if (supplier != null)
-                {
-                    return Ok(supplier);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (supplier != null)
             {
-                return Problem(ex.Message);
+                _logger.Information("Supplier found. SupplierId: {SupplierId}.", id);
+
+                return Ok(supplier);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", id);
+
+            return NotFound();
         }
 
+        /// <summary>
+        /// Creates a supplier.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST api/suppliers
+        ///     {        
+        ///       "name": "GoBikes",
+        ///       "city": "Ohio",
+        ///     }
+        /// </remarks>
+        /// <param name="createSupplier">The supplier object containing the details of the supplier to be created.</param>
+        /// <returns>A newly created supplier</returns>
+        /// <response code="200">Returns the newly created supplier</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateSupplier(CreateSupplierRequest createSupplier)
+        public async Task<IActionResult> CreateSupplier([FromBody] CreateSupplierRequest createSupplier)
         {
-            try
-            {
-                var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
+            var s = await _mediator.Send(new CreateSupplierCommand(createSupplier));
 
-                return Ok(s);
-            }
-            catch (Exception ex)
-            {
-                return Problem(ex.Message);
-            }
+            _logger.Information("Supplier created. SupplierId: {SupplierId}.", s.SupplierId);
+
+            return Ok(s);
         }
 
+        /// <summary>
+        /// Updates a supplier.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT api/suppliers
+        ///     {        
+        ///       "categoryId": 1,
+        ///       "name": "GoBikes",
+        ///       "city": "Ohio"
+        ///     }
+        /// </remarks>
+        /// <param name="updateSupplier">The supplier object containing the details of the supplier to be updated.</param>
+        /// <returns>An updated supplier</returns>
+        /// <response code="200">Returns the updated supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateSupplier(UpdateSupplierRequest updateSupplier)
+        public async Task<IActionResult> UpdateSupplier([FromBody] UpdateSupplierRequest updateSupplier)
         {
-            try
-            {
-                var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
+            var s = await _mediator.Send(new UpdateSupplierCommand(updateSupplier));
 
-                if (s != null)
-                {
-                    return Ok(s);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (s != null)
             {
-                return Problem(ex.Message);
+                _logger.Information("Supplier updated. SupplierId: {SupplierId}.", s.SupplierId);
+
+                return Ok(s);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", updateSupplier.SupplierId);
+
+            return NotFound();
         }
 
+        /// <summary>
+        /// Deletes a supplier by its id.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     DELETE api/suppliers/1
+        ///     
+        /// </remarks>
+        /// <param name="id">The ID of the supplier. This ID is used to delete a specific supplier from the database.</param>
+        /// <returns>An deleted supplier</returns>
+        /// <response code="200">Returns the deleted supplier</response>
+        /// <response code="404">If the supplier does not exist</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Supplier))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<IActionResult> DeleteSupplier(long id)
+        public async Task<IActionResult> DeleteSupplier([FromRoute] long id)
         {
-            try
-            {
-                var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
+            var supplier = await _mediator.Send(new DeleteSupplierCommand(id));
 
-                if (supplier != null)
-                {
-                    return Ok(supplier);
-                }
-
-                return NotFound();
-            }
-            catch (Exception ex)
+            if (supplier != null)
             {
-                return Problem(ex.Message);
+                _logger.Information("Supplier deleted. SupplierId: {SupplierId}.", id);
+
+                return Ok(supplier);
             }
+            _logger.Information("Supplier not found. SupplierId: {SupplierId}.", id);
+
+            return NotFound();
         }
     }
 }

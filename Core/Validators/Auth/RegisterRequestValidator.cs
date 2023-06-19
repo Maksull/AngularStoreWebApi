@@ -11,6 +11,7 @@ namespace Core.Validators.Auth
             RuleFor(r => r.LastName).NotEmpty();
             RuleFor(r => r.Username).NotEmpty();
             RuleFor(r => r.Email).Matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+            RuleFor(r => r.PhoneNumber).MatchesUkrainianPhoneNumber();
             RuleFor(r => r.Password).MatchesPassword();
             RuleFor(r => r.ConfirmPassword).Equal(r => r.Password)
                 .WithMessage("'ConfirmPassword' must be equal to password");

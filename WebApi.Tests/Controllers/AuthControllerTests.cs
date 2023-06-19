@@ -1,9 +1,8 @@
 ﻿using Core.Contracts.Controllers.Auth;
 using Core.Mediator.Commands.Auth;
+using Core.Mediator.Queries.Auth;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -11,12 +10,14 @@ namespace WebApi.Tests.Controllers
     public sealed class AuthControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
 
@@ -63,26 +64,6 @@ namespace WebApi.Tests.Controllers
             result.Value.Should().BeOfType<string>();
         }
 
-        [Fact]
-        public void Login_WhenException_ReturnProblem()
-        {
-            //Arrange
-            LoginRequest loginRequest = new("First", "Password");
-            JwtResponse jwtResponse = new("jwt", new());
-
-            _mediator.Setup(m => m.Send(It.IsAny<LoginCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.Login(loginRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
 
@@ -92,10 +73,11 @@ namespace WebApi.Tests.Controllers
         public void Register_WhenCalled_ReturnOk()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "+380554447788", "Password", "Password");
+            List<string> errors = new();
 
             _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .ReturnsAsync(true);
+                .ReturnsAsync(errors);
 
             //Act
             var response = (_controller.Register(registerRequest).Result as OkResult)!;
@@ -108,37 +90,25 @@ namespace WebApi.Tests.Controllers
         public void Register_WhenCalled_ReturnBadRequest()
         {
             //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
+            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "+380554447788", "Password", "Password");
+            List<string> errors = new()
+            {
+                "error"
+            };
 
             _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .ReturnsAsync(false);
+                .ReturnsAsync(errors);
 
 
             //Act
             var response = _controller.Register(registerRequest).Result;
-            var result = (response as BadRequestResult)!;
+            var result = (response as BadRequestObjectResult)!;
+            var value = (result.Value as RegisterFailed)!;
 
             //Assert
-            result.Should().BeOfType<BadRequestResult>();
-        }
-
-        [Fact]
-        public void Register_WhenException_ReturnProblem()
-        {
-            //Arrange
-            RegisterRequest registerRequest = new("First", "Second", "Name", "Email", "Password", "Password");
-
-            _mediator.Setup(m => m.Send(It.IsAny<RegisterCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.Register(registerRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
+            result.Should().BeOfType<BadRequestObjectResult>();
+            value.Should().BeOfType<RegisterFailed>();
+            value.Errors.Should().BeEquivalentTo(errors);
         }
 
         #endregion
@@ -186,24 +156,156 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
         }
 
+        #endregion
+
+
+        #region GeUserData
+
         [Fact]
-        public void RefreshJwt_WhenException_ReturnProblem()
+        public void GetUserData_WhenCalled_ReturnOk()
         {
             //Arrange
-            RefreshTokenRequest refreshTokenRequest = new("Token", DateTime.Now);
-            JwtResponse jwtResponse = new("jwt", new());
-
-            _mediator.Setup(m => m.Send(It.IsAny<RefreshCommand>(), default))
-                .Throws(new Exception("Test Exception"));
+            UserResponse userResponse = new("First", "Last", "Username", "my_email@gog.co", "+10324114617");
+            _mediator.Setup(m => m.Send(It.IsAny<GetUserDataQuery>(), default))
+                .ReturnsAsync(userResponse);
 
             //Act
-            var response = (_controller.RefreshJwt(refreshTokenRequest).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
+            var response = (_controller.GetUserData().Result as OkObjectResult)!;
+            var result = response.Value as UserResponse;
 
             //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
+            response.Should().BeOfType<OkObjectResult>();
+            result.Should().BeOfType<UserResponse>();
+            result.Should().BeEquivalentTo(userResponse);
+        }
+
+        [Fact]
+        public void GetUserData_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            _mediator.Setup(m => m.Send(It.IsAny<GetUserDataQuery>(), default))
+                .ReturnsAsync((UserResponse)null!);
+
+            //Act
+            var response = _controller.GetUserData().Result;
+            var result = response as NotFoundResult;
+
+            //Assert
+            result.Should().BeOfType<NotFoundResult>();
+        }
+
+        #endregion
+
+
+        #region ConfirmEmail
+
+        [Fact]
+        public void ConfirmEmail_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ConfirmEmailCommand confirmEmailCommand = new(Guid.NewGuid().ToString(), "Token");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmEmailCommand>(), default))
+                .ReturnsAsync(true);
+
+            //Act
+            var response = (_controller.ConfirmEmail(confirmEmailCommand.UserId, confirmEmailCommand.Token).Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ConfirmEmail_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            ConfirmEmailCommand confirmEmailCommand = new(Guid.Empty.ToString(), "Token");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmEmailCommand>(), default))
+                .ReturnsAsync(false);
+
+            //Act
+            var response = (_controller.ConfirmEmail(confirmEmailCommand.UserId, confirmEmailCommand.Token).Result as NotFoundResult)!;
+
+            //Assert
+            response.Should().BeOfType<NotFoundResult>();
+        }
+
+        #endregion
+
+
+        #region ResetPassword
+
+        [Fact]
+        public void ResetPassword_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ResetPasswordCommand resetPasswordCommand = new(Guid.NewGuid().ToString(), "username");
+            _mediator.Setup(m => m.Send(It.IsAny<ResetPasswordCommand>(), default))
+                .ReturnsAsync(true);
+
+            //Act
+            var response = (_controller.ResetPassword(resetPasswordCommand.UserId, resetPasswordCommand.Username).Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ResetPassword_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            ResetPasswordCommand resetPasswordCommand = new(Guid.Empty.ToString(), "username");
+            _mediator.Setup(m => m.Send(It.IsAny<ResetPasswordCommand>(), default))
+                .ReturnsAsync(false);
+
+            //Act
+            var response = (_controller.ResetPassword(resetPasswordCommand.UserId, resetPasswordCommand.Username).Result as NotFoundResult)!;
+
+            //Assert
+            response.Should().BeOfType<NotFoundResult>();
+        }
+
+        #endregion
+
+
+        #region ConfirmResetPassword
+
+        [Fact]
+        public void ConfirmResetPassword_WhenCalled_ReturnOk()
+        {
+            //Arrange
+            ConfirmResetPasswordCommand confirmResetPasswordCommand = new(Guid.NewGuid().ToString(), "token", "newPassword");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmResetPasswordCommand>(), default))
+                .ReturnsAsync(new List<string>());
+
+            //Act
+            var response = (_controller.ConfirmResetPassword(confirmResetPasswordCommand.UserId, confirmResetPasswordCommand.Token, confirmResetPasswordCommand.NewPassword)
+                .Result as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
+
+        [Fact]
+        public void ConfirmResetPassword_WhenCalled_ReturnNotFound()
+        {
+            //Arrange
+            List<string> errors = new()
+            {
+                "Test error",
+            };
+            ConfirmResetPasswordCommand confirmResetPasswordCommand = new(Guid.Empty.ToString(), "token", "newPassword");
+            _mediator.Setup(m => m.Send(It.IsAny<ConfirmResetPasswordCommand>(), default))
+                .ReturnsAsync(errors);
+
+            //Assert
+            var response = _controller.ConfirmResetPassword(confirmResetPasswordCommand.UserId, confirmResetPasswordCommand.Token, confirmResetPasswordCommand.NewPassword).Result;
+            var result = (response as BadRequestObjectResult)!;
+            var value = (result.Value as ConfirmResetPasswordFailed)!;
+
+            //Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            value.Should().BeOfType<ConfirmResetPasswordFailed>();
+            value.Errors.Should().BeEquivalentTo(errors);
         }
 
         #endregion
@@ -221,5 +323,16 @@ namespace WebApi.Tests.Controllers
             response.Should().BeOfType<OkResult>();
         }
 
+        [Fact]
+        public void AdminProtected_WhenCalled_ReturnOk()
+        {
+            //Arrange
+
+            //Act
+            var response = (_controller.AdminProtected() as OkResult)!;
+
+            //Assert
+            response.Should().BeOfType<OkResult>();
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace Infrastructure.Data.Configuration
                 NormalizedEmail = _adminEmail.ToUpper(),
                 PhoneNumber = "1234567890",
                 PhoneNumberConfirmed = false,
-                EmailConfirmed = false,
+                EmailConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
             };

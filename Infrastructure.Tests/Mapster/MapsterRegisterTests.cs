@@ -180,11 +180,12 @@ namespace Infrastructure.Tests.Mapster
                 LastName = "TestLastName",
                 UserName = "UserName",
                 Email = "email",
+                PhoneNumber = "+380554441618",
                 RefreshToken = "TestRefreshToken",
                 RefreshTokenExpired = DateTime.Now,
             };
 
-            RegisterRequest registerRequest = new(user.FirstName, user.LastName, user.UserName, user.Email, "Password", "Password");
+            RegisterRequest registerRequest = new(user.FirstName, user.LastName, user.UserName, user.Email, user.PhoneNumber, "Password", "Password");
 
             //Act
             var mappedRegisterRequest = _mapper.Map<User>(registerRequest);
@@ -194,6 +195,7 @@ namespace Infrastructure.Tests.Mapster
             mappedRegisterRequest.LastName.Should().Be(user.LastName);
             mappedRegisterRequest.UserName.Should().Be(user.UserName);
             mappedRegisterRequest.Email.Should().Be(user.Email);
+            mappedRegisterRequest.PhoneNumber.Should().Be(user.PhoneNumber);
         }
 
         [Fact]

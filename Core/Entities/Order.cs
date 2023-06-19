@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Entities
 {
@@ -6,6 +7,9 @@ namespace Core.Entities
     {
         [Key]
         public long OrderId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public string? UserId { get; set; }
+        public User? Category { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]

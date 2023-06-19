@@ -1,4 +1,6 @@
-﻿using Core.Entities;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Entities;
 using Core.Mediator.Queries.Products;
 using Infrastructure.Mediator.Handlers.Products;
 using Infrastructure.Services.Interfaces;
@@ -9,12 +11,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Products
     public sealed class GetProductsHandlerTests
     {
         private readonly Mock<IProductService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly GetProductsHandler _handler;
 
         public GetProductsHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -38,6 +42,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Products
             };
             _service.Setup(s => s.GetProducts())
                 .Returns(products);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new GetProductsQuery(), CancellationToken.None).Result;

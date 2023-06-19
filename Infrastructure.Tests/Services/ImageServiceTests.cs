@@ -22,10 +22,10 @@ namespace Infrastructure.Tests.Services
             _imageService = new(_s3Client.Object, _configuration);
         }
 
-        #region GetFile
+        #region GetImage
 
         [Fact]
-        public async Task GetFile_WhenFileExists_ReturnGetObjectResponse()
+        public async Task GetImage_WhenImageExists_ReturnGetObjectResponse()
         {
             // Arrange
             GetObjectResponse getObjectResponse = new();
@@ -37,7 +37,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync(getObjectResponse);
 
             // Act
-            var result = (await _imageService.GetFile(""))!;
+            var result = (await _imageService.GetImage(""))!;
 
             // Assert
             result.Should().BeOfType<GetObjectResponse>();
@@ -45,7 +45,7 @@ namespace Infrastructure.Tests.Services
         }
 
         [Fact]
-        public async Task GetFile_WhenFileNotExists_ReturnGetObjectResponse()
+        public async Task GetImage_WhenImageNotExists_ReturnGetObjectResponse()
         {
             // Arrange
             _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
@@ -55,14 +55,28 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync((GetObjectResponse)null!);
 
             // Act
-            var result = (await _imageService.GetFile(""))!;
+            var result = (await _imageService.GetImage(""))!;
 
             // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task GetFile_WhenException_ReturnNull()
+        public async Task GetImage_WhenBucketDoesNotExists_ReturnNull()
+        {
+            // Arrange
+            _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = (await _imageService.GetImage(""))!;
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetImage_WhenException_ReturnNull()
         {
             // Arrange
             _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
@@ -72,7 +86,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync((GetObjectResponse)null!);
 
             // Act
-            var result = (await _imageService.GetFile(""))!;
+            var result = (await _imageService.GetImage(""))!;
 
             // Assert
             result.Should().BeNull();
@@ -81,10 +95,10 @@ namespace Infrastructure.Tests.Services
         #endregion
 
 
-        #region UploadFile
+        #region UploadImage
 
         [Fact]
-        public async Task UploadFile_WhenBucketExists_ReturnFile()
+        public async Task UploadImage_WhenBucketExists_ReturnImage()
         {
             // Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
@@ -98,7 +112,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = (await _imageService.UploadFile(file, ""))!;
+            var result = (await _imageService.UploadImage(file, ""))!;
 
             // Assert
             result.Should().BeOfType<FormFile>();
@@ -106,7 +120,7 @@ namespace Infrastructure.Tests.Services
         }
 
         [Fact]
-        public async Task UploadFile_WhenBucketNotExists_ReturnNull()
+        public async Task UploadImage_WhenBucketNotExists_ReturnNull()
         {
             // Arrange
             var bytes = Encoding.UTF8.GetBytes("This is a dummy file");
@@ -116,7 +130,7 @@ namespace Infrastructure.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = (await _imageService.UploadFile(file, ""))!;
+            var result = (await _imageService.UploadImage(file, ""))!;
 
             // Assert
             result.Should().BeNull();
@@ -125,31 +139,48 @@ namespace Infrastructure.Tests.Services
         #endregion
 
 
-        #region DeleteFile
+        #region DeleteImage
 
         [Fact]
-        public async Task DeleteFile_WhenBucketExists_ReturnTrue()
+        public async Task DeleteImage_WhenBucketExists_ReturnTrue()
         {
             // Arrange
             _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _imageService.DeleteFile("");
+            var result = await _imageService.DeleteImage("");
 
             // Assert
             result.Should().BeTrue();
         }
 
         [Fact]
-        public async Task DeleteFile_WhenBucketNotExists_ReturnFalse()
+        public async Task DeleteImage_WhenBucketNotExists_ReturnFalse()
         {
             // Arrange
             _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _imageService.DeleteFile("");
+            var result = await _imageService.DeleteImage("");
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task DeleteImage_WhenException_ReturnFalse()
+        {
+            // Arrange
+            _s3Client.Setup(s => s.DoesS3BucketExistAsync(It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            _s3Client.Setup(s => s.DeleteObjectAsync(It.IsAny<string>(), It.IsAny<string>(), default))
+                .ThrowsAsync(new Exception("Test Exception"));
+
+            // Act
+            var result = await _imageService.DeleteImage("");
 
             // Assert
             result.Should().BeFalse();

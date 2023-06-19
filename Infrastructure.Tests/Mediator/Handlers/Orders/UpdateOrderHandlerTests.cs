@@ -1,4 +1,6 @@
-﻿using Core.Contracts.Controllers.Orders;
+﻿using App.Metrics;
+using App.Metrics.Counter;
+using Core.Contracts.Controllers.Orders;
 using Core.Entities;
 using Core.Mediator.Commands.Orders;
 using Infrastructure.Mediator.Handlers.Orders;
@@ -10,12 +12,14 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
     public sealed class UpdateOrderHandlerTests
     {
         private readonly Mock<IOrderService> _service;
+        private readonly Mock<IMetrics> _metrics;
         private readonly UpdateOrderHandler _handler;
 
         public UpdateOrderHandlerTests()
         {
             _service = new();
-            _handler = new(_service.Object);
+            _metrics = new();
+            _handler = new(_service.Object, _metrics.Object);
         }
 
         [Fact]
@@ -37,6 +41,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
             _service.Setup(s => s.UpdateOrder(It.IsAny<UpdateOrderRequest>()))
                 .ReturnsAsync(order);
 
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
+
             //Act
             var result = _handler.Handle(new UpdateOrderCommand(updateOrder), CancellationToken.None).Result;
 
@@ -52,6 +59,9 @@ namespace Infrastructure.Tests.Mediator.Handlers.Orders
             UpdateOrderRequest updateOrder = new(1, "First", "a@a.co", "address", "CityFirst", "Country", "Zip", false, new List<UpdateCartLineRequest>());
             _service.Setup(s => s.UpdateOrder(It.IsAny<UpdateOrderRequest>()))
                 .ReturnsAsync((Order)null!);
+
+            var counterMock = new Mock<IMeasureCounterMetrics>();
+            _metrics.Setup(m => m.Measure.Counter).Returns(counterMock.Object);
 
             //Act
             var result = _handler.Handle(new UpdateOrderCommand(updateOrder), CancellationToken.None).Result;

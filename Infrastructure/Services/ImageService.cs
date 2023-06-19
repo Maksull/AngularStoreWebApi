@@ -17,7 +17,7 @@ namespace Infrastructure.Services
             _s3BucketName = configuration.GetSection("AWS:BucketName").Value!;
         }
 
-        public async Task<GetObjectResponse?> GetFile(string key)
+        public async Task<GetObjectResponse?> GetImage(string key)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<IFormFile?> UploadFile(IFormFile file, string path)
+        public async Task<IFormFile?> UploadImage(IFormFile file, string path)
         {
             if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
             {
@@ -55,14 +55,23 @@ namespace Infrastructure.Services
             return null;
         }
 
-        public async Task<bool> DeleteFile(string path)
+        public async Task<bool> DeleteImage(string path)
         {
-            if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
+            try
             {
-                await _s3Client.DeleteObjectAsync(_s3BucketName, path);
-                return true;
+                if (await _s3Client.DoesS3BucketExistAsync(_s3BucketName))
+                {
+                    await _s3Client.DeleteObjectAsync(_s3BucketName, path);
+
+                    return true;
+                }
+
+                return false;
             }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

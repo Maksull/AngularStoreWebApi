@@ -8,6 +8,7 @@ using Mapster;
 using MapsterMapper;
 using MockQueryable.Moq;
 using Moq;
+using System.Security.Claims;
 
 namespace Infrastructure.Tests.Services
 {
@@ -25,7 +26,7 @@ namespace Infrastructure.Tests.Services
             _mapper = GetMapper();
             _emailService = new();
             _cacheService = new();
-            _orderService = new(_unitOfWork.Object, _mapper, _emailService.Object, _cacheService.Object); ;
+            _orderService = new(_unitOfWork.Object, _mapper, _emailService.Object, _cacheService.Object);
         }
 
 
@@ -55,6 +56,47 @@ namespace Infrastructure.Tests.Services
 
             //Act
             var result = _orderService.GetOrders().ToArray();
+
+
+            //Arrange
+            result.Should().BeOfType<Order[]>();
+            result.Should().BeEquivalentTo(orders);
+        }
+
+        #endregion
+
+
+        #region GetOrdersByUserId
+
+        [Fact]
+        public void GetOrdersByUserId_WhenCalled_ReturnOrders()
+        {
+            //Arrange
+            string id = Guid.NewGuid().ToString();
+            Order[] orders = new Order[]
+            {
+                new()
+                {
+                    OrderId = 1, UserId = id, Name = "First", Email = "a@a.co", Address = "address", City = "CityFirst", Country = "Country", Zip = "Zip", Lines = new List<CartLine>()
+                },
+                new()
+                {
+                    OrderId = 2, UserId = id, Name = "Second", Email = "a@a.co", Address = "address", City = "CitySecond", Country = "Country", Zip = "Zip", Lines = new List<CartLine>()
+                },
+                new()
+                {
+                    OrderId = 3, UserId = id, Name = "First", Email = "a@a.co", Address = "address", City = "CityFirst", Country = "Country", Zip = "Zip", Lines = new List<CartLine>()
+                },
+            };
+            var userRequest = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, id)
+            }));
+
+            _unitOfWork.Setup(u => u.Order.Orders).Returns(orders.AsQueryable());
+
+            //Act
+            var result = _orderService.GetOrdersByUserId(userRequest).ToArray();
 
 
             //Arrange
@@ -133,10 +175,12 @@ namespace Infrastructure.Tests.Services
         public void CreateOrder_WhenCalled_ReturnOrder()
         {
             //Arrange
+            string userId = Guid.NewGuid().ToString();
             CreateOrderRequest createOrder = new("First", "a@a.co", "address", "CityFirst", "Country", "Zip", new List<CreateCartLineRequest>());
             Order order = new()
             {
                 OrderId = 0,
+                UserId = userId,
                 Name = "First",
                 Email = "a@a.co",
                 Address = "address",
@@ -145,10 +189,14 @@ namespace Infrastructure.Tests.Services
                 Zip = "Zip",
                 Lines = new List<CartLine>(),
             };
+            var userRequest = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId)
+            }));
             _unitOfWork.Setup(u => u.Order.CreateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
 
             //Act
-            var result = _orderService.CreateOrder(createOrder).Result;
+            var result = _orderService.CreateOrder(createOrder, userRequest).Result;
 
             //Assert
             result.Should().BeOfType<Order>();
@@ -250,8 +298,8 @@ namespace Infrastructure.Tests.Services
         public void DeleteOrder_WhenCalled_ReturnNull()
         {
             //Arrange
-            Order[] Orders = Array.Empty<Order>();
-            var mock = Orders.AsQueryable().BuildMock();
+            Order[] orders = Array.Empty<Order>();
+            var mock = orders.AsQueryable().BuildMock();
 
             _unitOfWork.Setup(u => u.Order.Orders).Returns(mock);
 

@@ -3,9 +3,7 @@ using Core.Entities;
 using Core.Mediator.Commands.Categories;
 using Core.Mediator.Queries.Categories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using WebApi.Controllers;
 
 namespace WebApi.Tests.Controllers
@@ -13,12 +11,14 @@ namespace WebApi.Tests.Controllers
     public sealed class CategoriesControllerTests
     {
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<Serilog.ILogger> _logger;
         private readonly CategoriesController _controller;
 
         public CategoriesControllerTests()
         {
             _mediator = new();
-            _controller = new(_mediator.Object);
+            _logger = new();
+            _controller = new(_mediator.Object, _logger.Object);
         }
 
         #region GetCategories
@@ -73,23 +73,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void GetCategories_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<GetCategoriesQuery>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.GetCategories().Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
 
@@ -132,23 +115,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void GetCategory_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<GetCategoryByIdQuery>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.GetCategory(1).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
         #region CreateCategory
@@ -173,25 +139,6 @@ namespace WebApi.Tests.Controllers
             //Assert
             result.Should().BeOfType<OkObjectResult>();
             result.Value.Should().BeOfType<Category>();
-        }
-
-        [Fact]
-        public void CreateCategory_WhenException_ReturnProblem()
-        {
-            //Arrange
-            CreateCategoryRequest createCategory = new("First");
-
-            _mediator.Setup(m => m.Send(It.IsAny<CreateCategoryCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.CreateCategory(createCategory).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
@@ -237,25 +184,6 @@ namespace WebApi.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        [Fact]
-        public void UpdateCategory_WhenException_ReturnProblem()
-        {
-            //Arrange
-            UpdateCategoryRequest updateCategory = new(1, "First");
-
-            _mediator.Setup(m => m.Send(It.IsAny<UpdateCategoryCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.UpdateCategory(updateCategory).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
-        }
-
         #endregion
 
         #region DeleteCategory
@@ -293,23 +221,6 @@ namespace WebApi.Tests.Controllers
 
             //Assert
             result.Should().BeOfType<NotFoundResult>();
-        }
-
-        [Fact]
-        public void DeleteCategory_WhenException_ReturnProblem()
-        {
-            //Arrange
-            _mediator.Setup(m => m.Send(It.IsAny<DeleteCategoryCommand>(), default))
-                .Throws(new Exception("Test Exception"));
-
-            //Act
-            var response = (_controller.DeleteCategory(1).Result as ObjectResult)!;
-            var result = response.Value as ProblemDetails;
-
-            //Assert
-            result.Should().BeOfType<ProblemDetails>();
-            result.Should().Match<ProblemDetails>(r => r.Status == StatusCodes.Status500InternalServerError
-                                                  && r.Detail == "Test Exception");
         }
 
         #endregion
