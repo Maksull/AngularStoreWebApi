@@ -1,0 +1,85 @@
+version: '3'
+
+services:
+  webapi:
+    image: maksull/webapi:latest2
+    container_name: webapi
+    ports:
+      - '8080:80'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - sqlserver
+      - redis
+      - elasticsearch
+      - kibana
+      - grafana
+    networks:
+      - webapinetwork
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    container_name: webapi-sqlserver
+    environment:
+      SA_PASSWORD: "MyDatabaseSecret123"
+      ACCEPT_EULA: "Y"
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-Usa", "-PMyDatabaseSecret123", "-Q", "select 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - webapinetwork
+  redis:
+    image: redis:latest
+    container_name: webapi-redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - webapinetwork
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: webapi-elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - 9200:9200
+    networks:
+      - webapinetwork
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    container_name: webapi-kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - webapinetwork
+
+  prometheus:
+    image: prom/prometheus
+    container_name: webapi-prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - webapinetwork
+  grafana:
+    image: grafana/grafana
+    container_name: webapi-grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    networks:
+      - webapinetwork
+    
+networks:
+  webapinetwork:
+    driver: bridge
